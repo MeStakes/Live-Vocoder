@@ -12,13 +12,21 @@ use tauri::State;
 // Manopole: la pagina le manda per nome (manopole.js, parametriRust), l'audio le legge una volta per blocco.
 const NOMI: [&str; 10] = ["effetto", "wet", "timbro", "bande", "cons", "morb", "scivola", "gate", "vol", "muto"];
 
-#[derive(Default)]
 pub struct Audio {
     tx: Mutex<Option<mpsc::Sender<()>>>,
     p: Arc<[AtomicU32; 10]>,
     // ponytail: 5 frequenze + quante + k in atomici separati; un blocco (1,3 ms) può leggere un accordo a metà.
     // Non si sente, purché le frequenze lette siano sempre valide: Motore::note scarta quelle a zero.
     note: Arc<[AtomicU32; 7]>,
+}
+
+// Parte muto: finché la pagina non sa se l'Uscita sono le cuffie, l'Ascolto tace (con gli altoparlanti fischierebbe).
+impl Default for Audio {
+    fn default() -> Self {
+        let a = Audio { tx: Mutex::new(None), p: Arc::default(), note: Arc::default() };
+        a.p[9].store(1f32.to_bits(), Relaxed);
+        a
+    }
 }
 
 fn nome(d: &cpal::Device) -> String {
@@ -159,6 +167,13 @@ mod tests {
 
     // A mano: ogni nome di CoreAudio deve esistere anche in cpal (dispositivi.rs), se no avvia_audio dice «manca …».
     // cargo test --release nomi_uguali -- --ignored --nocapture
+    #[test]
+    fn parte_muto() {
+        // finché la pagina non sa se l'Uscita sono le cuffie, l'Ascolto tace (altoparlanti = fischio)
+        let a = Audio::default();
+        assert_eq!(f32::from_bits(a.p[9].load(Relaxed)), 1.0);
+    }
+
     #[test]
     #[ignore]
     fn nomi_uguali() {

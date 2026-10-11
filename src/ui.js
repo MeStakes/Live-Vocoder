@@ -17,7 +17,7 @@ const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAl
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const esc = s => String(s).replace(/[&<>"]/g, c => `&#${c.charCodeAt(0)};`);
 const st = {i:0, edit:-1, lv:3, song:0, ...structuredClone(songs[0].data),
-            dev:{}, att:{}, liste:{in:[], out:[], cam:[]}, fermi:false, mani:{accordi:null, seconda:null}, muto:false,
+            dev:{}, att:{}, liste:{in:[], out:[], cam:[]}, fermi:true, mani:{accordi:null, seconda:null}, muto:true,
             ui:{panel:null, desk:true, menu:false, form:null, draft:'', err:''}};
 const snapshot = () => structuredClone(Object.fromEntries(SONG_KEYS.map(k => [k, st[k]])));
 // Apri una Canzone: la seconda mano riparte da Intensità 3 (deciso in "Funzionalità must-have v1").
@@ -278,6 +278,7 @@ function controllaDispositivi() {
     if (reg && inn !== st.att.in) fermaRegistrazione("Il microfono si è staccato: ho fermato la Registrazione e l'ho salvata.");
     if (inn !== st.att.in || out !== st.att.out) {
       st.att.in = inn; st.att.out = out;
+      motore.parametri({ muto: st.muto ? 1 : 0 }); // prima di accendere: mai un istante sugli altoparlanti
       await motore.avvia(inn, out).catch(e => avviso('audio', `Non riesco ad accendere l'audio: ${e}`));
     }
     if (cam !== st.att.cam || st.format !== st.camFormato) {
