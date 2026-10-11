@@ -358,6 +358,10 @@ impl Motore {
 
     // Lista vuota = accordi fermi: si tengono le ultime note mentre la quota d'Effetto scende a zero, così niente clic.
     pub fn note(&mut self, hz: &[f32], k: usize) {
+        // Una lettura a metà di set_note può dare frequenze a zero: il Coro le trasformerebbe in NaN per sempre.
+        if hz.iter().any(|f| !f.is_finite() || *f < 1.0) {
+            return;
+        }
         self.suona = !hz.is_empty();
         if self.suona {
             self.nv = hz.len().min(5);
@@ -489,6 +493,24 @@ mod tests {
             for (a, b) in x[SR as usize..].iter().zip(&y[SR as usize..]) {
                 assert!((a - b).abs() < 1e-3, "effetto {effetto}: voce {a} uscita {b}");
             }
+        }
+    }
+
+    #[test]
+    fn note_lette_a_meta_non_rompono_il_motore() {
+        // set_note può essere letto a metà: vecchio conteggio con frequenze già a zero (revisione finale, #1)
+        for effetto in [0, 1, 2] {
+            let mut m = Motore::new();
+            let x = voice();
+            let mut y = vec![0.0; x.len()];
+            m.note(&LAM, 3);
+            m.blocco(&x[..4800], &mut y[..4800], &par(effetto, 0.9));
+            m.note(&[440.0, 0.0, 0.0, 0.0], 3);
+            m.blocco(&x[4800..9600], &mut y[4800..9600], &par(effetto, 0.9));
+            m.note(&LAM, 3);
+            m.blocco(&x[9600..], &mut y[9600..], &par(effetto, 0.9));
+            assert!(y.iter().all(|v| v.is_finite()), "effetto {effetto}: uscita non finita");
+            assert!(rms(&y[SR as usize..]) > 0.01, "effetto {effetto}: motore muto");
         }
     }
 

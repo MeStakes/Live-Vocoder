@@ -16,7 +16,8 @@ const NOMI: [&str; 10] = ["effetto", "wet", "timbro", "bande", "cons", "morb", "
 pub struct Audio {
     tx: Mutex<Option<mpsc::Sender<()>>>,
     p: Arc<[AtomicU32; 10]>,
-    // ponytail: 5 frequenze + quante + k in atomici separati; un blocco (1,3 ms) può leggere un accordo a metà, non si sente.
+    // ponytail: 5 frequenze + quante + k in atomici separati; un blocco (1,3 ms) può leggere un accordo a metà.
+    // Non si sente, purché le frequenze lette siano sempre valide: Motore::note scarta quelle a zero.
     note: Arc<[AtomicU32; 7]>,
 }
 
@@ -53,6 +54,10 @@ pub fn set(a: State<Audio>, nome: String, valore: f32) -> Result<(), String> {
 // Le note che suonano (accordo.js, noteDellAccordo); lista vuota = accordi fermi.
 #[tauri::command]
 pub fn set_note(a: State<Audio>, hz: Vec<f32>, k: u32) {
+    if hz.is_empty() {
+        // accordi fermi: basta il conteggio, le frequenze vecchie restano valide per chi legge a metà
+        return a.note[5].store(0, Relaxed);
+    }
     for (i, slot) in a.note[..5].iter().enumerate() {
         slot.store(hz.get(i).copied().unwrap_or(0.0).to_bits(), Relaxed);
     }
