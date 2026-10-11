@@ -49,3 +49,25 @@ test('canzoni.json di una versione vecchia: si completano i campi mancanti', () 
   assert.equal(d.canzoni[0].data.snd.vol, 2);
   assert.equal(d.canzoni[0].data.beads.length, 5);
 });
+
+test('canzoni.json con una forma strana: mai un errore, null se una Canzone non ha un nome valido', () => {
+  for (const t of ['{"canzoni":[null]}', '{"canzoni":[5]}', '{"canzoni":[{"data":{}}]}', '{"canzoni":[{"name":"..","data":{}}]}',
+    '{"canzoni":[{"name":"/tmp/fuori"}]}', '{"canzoni":[{"name":"A"},{"name":"a"}]}'])
+    assert.equal(interpreta(t), null, t);
+});
+
+test('canzoni.json con valori sbagliati: si riparano un campo alla volta', () => {
+  const d = interpreta(JSON.stringify({ cartella: 5, canzoni: [
+    { name: 'x', data: null },
+    { name: ' y ', data: { beads: [{ r: 99, t: 'xx', o: 7 }, { r: 2, t: 'maj7', o: 1 }], eff: 'boh', mode: 3, snd: { bande: 99, vol: 2.5 }, mano: 'destra', titolo: 'si' } },
+  ] }));
+  assert.equal(d.cartella, null);
+  assert.equal(d.canzoni[0].data.beads.length, 5);
+  assert.equal(d.canzoni[0].data.eff, 'coro');
+  const y = d.canzoni[1];
+  assert.equal(y.name, 'y');
+  assert.deepEqual(y.data.beads.slice(0, 3), [{ r: 0, t: 'M', o: 0 }, { r: 2, t: 'maj7', o: 1 }, { r: 9, t: 'm', o: 0 }]);
+  assert.equal(y.data.beads.length, 5);
+  assert.deepEqual([y.data.eff, y.data.mode, y.data.mano, y.data.titolo], ['coro', 'accordi', 'destra', true]);
+  assert.deepEqual([y.data.snd.bande, y.data.snd.vol, y.data.snd.i1], [24, 2.5, 60]);
+});

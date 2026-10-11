@@ -247,7 +247,9 @@ function frame(now) {
 
 // Manda a Rust manopole, quota d'Effetto e note che suonano (motore.js manda solo quello che è cambiato).
 // Ogni modifica si salva da sola: non c'è un tasto Salva (spec §8).
+let pronto = false; // niente salvataggi prima che le Canzoni salvate siano lette: sovrascriverebbero il file
 function ricorda() {
+  if (!pronto) return;
   songs[st.song].data = snapshot();
   dati.aperta = songs[st.song].name;
   dati.dispositivi = st.dev;
@@ -384,7 +386,7 @@ async function aggiorna() {
 
 async function avvio() {
   const c = await carica();
-  dati = c.dati; songs = dati.canzoni; st.dev = dati.dispositivi;
+  dati = c.dati; songs = dati.canzoni; st.dev = dati.dispositivi; pronto = true;
   predefinita = await invoke('cartella_predefinita');
   dati.cartella ??= predefinita;
   openSong(Math.max(0, songs.findIndex(s => s.name === dati.aperta)), false);

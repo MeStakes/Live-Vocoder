@@ -1,5 +1,6 @@
 // Canzoni: cosa salva una Canzone, i valori di partenza, le regole del nome (spec §8).
-import { DEF_SND } from './manopole.js';
+import { DEF_SND, EKEYS, KN } from './manopole.js';
+import { TIPI } from './accordo.js';
 
 const B = (r, t, o = 0) => ({ r, t, o });
 // "Note e Suono di partenza" di una Canzone nuova
@@ -28,12 +29,37 @@ export function controllaNome(n, songs, except) {
   return '';
 }
 
-// Dai dati salvati: null se non si leggono (il file va messo da parte, non sovrascritto); i campi mancanti si completano.
+// Valori ammessi dei campi di una Canzone: quelli sbagliati tornano ai valori di partenza.
+const AMMESSI = { mode: ['accordi', 'nota'], format: ['verticale', 'orizzontale'], eff: EKEYS, mano: ['sinistra', 'destra'] };
+const notaValida = (b) => b && Number.isInteger(b.r) && b.r >= 0 && b.r <= 11 && Object.hasOwn(TIPI, b.t) && [-1, 0, 1].includes(b.o);
+function ripara(data) {
+  const d = canzone('', data && typeof data === 'object' ? data : {}).data;
+  for (const [k, ok] of Object.entries(AMMESSI)) if (!ok.includes(d[k])) d[k] = DEF_SONG[k];
+  for (const k of ['titolo', 'filtro', 'specchio', 'conto']) if (typeof d[k] !== 'boolean') d[k] = DEF_SONG[k];
+  const beads = Array.isArray(d.beads) ? d.beads : [];
+  d.beads = DEF_SONG.beads.map((b0, i) => (notaValida(beads[i]) ? { r: beads[i].r, t: beads[i].t, o: beads[i].o } : { ...b0 }));
+  if (!d.snd || typeof d.snd !== 'object') d.snd = { ...DEF_SND };
+  for (const K of KN) if (!K.vals.includes(d.snd[K.k])) d.snd[K.k] = K.def;
+  return d;
+}
+
+// Dai dati salvati. null se non si leggono o se una Canzone non ha un nome valido: il file va messo da parte, non sovrascritto.
+// I campi mancanti o sbagliati si riparano uno alla volta (una versione nuova può aggiungere campi).
 export function interpreta(testo) {
   let d;
   try { d = JSON.parse(testo); } catch { return null; }
   if (!d || !Array.isArray(d.canzoni) || !d.canzoni.length) return null;
-  return { ...datiIniziali(), ...d, dispositivi: d.dispositivi ?? {}, canzoni: d.canzoni.map((c) => canzone(c.name, c.data)) };
+  const canzoni = [];
+  for (const c of d.canzoni) {
+    if (!c || typeof c.name !== 'string' || controllaNome(c.name, canzoni, -1)) return null;
+    canzoni.push({ name: c.name.trim(), data: ripara(c.data) });
+  }
+  return {
+    ...datiIniziali(), ...d, canzoni,
+    cartella: typeof d.cartella === 'string' ? d.cartella : null,
+    dispositivi: d.dispositivi && typeof d.dispositivi === 'object' ? d.dispositivi : {},
+    guidaVista: d.guidaVista === true,
+  };
 }
 
 const invoke = (...a) => window.__TAURI__.core.invoke(...a);
