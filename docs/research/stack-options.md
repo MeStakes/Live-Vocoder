@@ -1,8 +1,10 @@
 # Live Vocoder: confronto degli stack per la v1
 
-Data: 2026-10-11. Stato: **bozza, da verificare.**
+Data: 2026-10-11. Stato: **bozza; punti 1–5 del ticket #3 verificati in parte (vedi sezione "Esiti verifica ticket #3"), il resto resta da verificare.**
 
-> **Nota sulle fonti.** La ricerca su fonti primarie (5 agenti in parallelo) è stata interrotta per limiti di budget prima che arrivasse qualsiasi risultato. **Nessuna affermazione qui sotto è stata verificata su una fonte primaria in questa sessione.** Tutto viene da conoscenze pregresse (fino a metà 2026) ed è marcato **(da verificare)**. Per ogni sezione indico le fonti primarie da controllare. Prima di prendere la decisione finale, va fatto lo spike di misura descritto in fondo.
+> **Aggiornamento ticket #3 (2026-10-11).** Cinque punti controllati su fonti primarie con budget limitato: esiti in fondo, sezione "Esiti verifica ticket #3". Dove scrivo "non confermato" la fonte primaria non diceva nulla. Il resto del documento è ancora la bozza originale.
+>
+> **Nota sulle fonti (bozza originale).** La ricerca su fonti primarie (5 agenti in parallelo) è stata interrotta per limiti di budget prima che arrivasse qualsiasi risultato. **Nessuna affermazione qui sotto è stata verificata su una fonte primaria in questa sessione.** Tutto viene da conoscenze pregresse (fino a metà 2026) ed è marcato **(da verificare)**. Per ogni sezione indico le fonti primarie da controllare. Prima di prendere la decisione finale, va fatto lo spike di misura descritto in fondo.
 
 ## Macchina target (confermata)
 
@@ -29,7 +31,7 @@ Data: 2026-10-11. Stato: **bozza, da verificare.**
 | Continuity Camera (iPhone) | AVFoundation via OpenCV: probabile, ma ordine degli indici fragile | compare in getUserMedia; la rotazione verticale è incerta | come Chrome | come il browser sottostante | supporto pieno + RotationCoordinator |
 | Complessità totale v1 | **alta** | **bassa** | media | media-alta | media |
 
-## 1. Latenza dell'Ascolto (da verificare)
+## 1. Latenza dell'Ascolto (parzialmente verificato, vedi esiti)
 
 - **Chrome (Web Audio):** con `echoCancellation`, `noiseSuppression` e `autoGainControl` a `false` e `latencyHint: "interactive"`, `baseLatency` su macOS è di pochi ms. La catena di ingresso di getUserMedia (pipeline di cattura WebRTC a blocchi da 10 ms, FIFO, eventuale ricampionamento 44,1↔48 kHz) aggiunge però latenza. Il round-trip reale riportato di solito è **20–40 ms** (da verificare). Fonti: crbug.com (input latency macOS), W3C Audio WG issues, MDN `AudioContext.outputLatency`, `AudioContext.playoutStats`.
 - **Safari:** AudioWorklet supportato. La latenza di ingresso è storicamente più alta e variabile, e ci sono problemi di ricampionamento (da verificare su bugs.webkit.org).
@@ -38,7 +40,7 @@ Data: 2026-10-11. Stato: **bozza, da verificare.**
 - **Bluetooth / AirPods:** sono **inutilizzabili per l'Ascolto**: 100–300 ms di latenza. Inoltre, se si usa il microfono degli AirPods, il collegamento passa al profilo HFP e l'audio peggiora molto. Servono **cuffie a filo** (jack 3,5 mm del MacBook Air oppure USB-C). L'app deve rilevare un'uscita Bluetooth e avvisarla.
 - **Ingresso e uscita su device diversi** (mic integrato + cuffie USB): possibile deriva di clock e latenza extra. Meglio il jack integrato oppure un'unica interfaccia USB.
 
-## 2. Registrazione MP4 e social (da verificare)
+## 2. Registrazione MP4 e social (parzialmente verificato, vedi esiti)
 
 - **Chrome:** MediaRecorder supporta `video/mp4` (H.264, audio AAC o Opus) da circa Chrome 126–130 (da verificare su chromestatus). L'MP4 prodotto è spesso **frammentato e a frame rate variabile**, cosa che può dare problemi in upload o in editing. Alternativa robusta: WebCodecs (VideoEncoder + AudioEncoder AAC) + Mediabunny / mp4-muxer, per avere un MP4 a frame rate costante.
 - **Safari:** MediaRecorder produce MP4 H.264/AAC dalla versione 14.1. Ci sono bug storici su durata e sincronia (da verificare).
@@ -53,7 +55,7 @@ Data: 2026-10-11. Stato: **bozza, da verificare.**
 - **Contesto sicuro:** `localhost` o HTTPS. `file://` non basta per getUserMedia.
 - **Offline:** i WASM di `@mediapipe/tasks-vision` e `hand_landmarker.task` (~8 MB) si possono ospitare in proprio (`FilesetResolver.forVisionTasks(path)`) e mettere in cache con un service worker (da verificare).
 
-## 4. Gatekeeper e firma (da verificare)
+## 4. Gatekeeper e firma (verificato in parte, vedi esiti)
 
 - **macOS 15 Sequoia ha tolto il bypass Ctrl-clic → Apri** per le app non notarizzate. Il nuovo percorso: si apre l'app, compare il blocco, poi si va in Impostazioni di Sistema > Privacy e sicurezza > "Apri comunque", con password di amministratore. Si presume che macOS 26 sia uguale o più restrittivo. Fonti: Apple Developer News (agosto 2024), support.apple.com/102445.
 - **Su Apple Silicon** i binari devono avere almeno una firma ad-hoc. Una firma ad-hoc non evita Gatekeeper se il file ha l'attributo di quarantena.
@@ -85,7 +87,7 @@ Data: 2026-10-11. Stato: **bozza, da verificare.**
 | Electron/Tauri | prompt di macOS a nome dell'app (servono le chiavi Info.plist); in Tauri si aggiunge il prompt di WKWebView | stabile solo se l'app è firmata |
 | Swift nativo | due prompt di sistema chiari col nome dell'app + prompt "cartella Download" | nessuno |
 
-## 8. Aggiunte per M1 8 GB e Continuity Camera (da verificare)
+## 8. Aggiunte per M1 8 GB e Continuity Camera (parzialmente verificato, vedi esiti)
 
 - **Headroom:** il nativo è il più leggero (Vision su ANE, encoder hardware, niente runtime web). Chrome con MediaPipe WebGL e MediaRecorder è fattibile su 8 GB, ma con Tahoe e altre app aperte la pressione sulla memoria sale. Electron aggiunge un secondo Chromium. Python con Qt, mediapipe e opencv è il più pesante sulla CPU.
 - **Senza ventola:** su sessioni lunghe (più di ~10 minuti) l'encoding software o l'inferenza solo su CPU possono causare throttling e glitch audio. È un motivo per preferire encoder hardware (VideoToolbox) e ANE.
@@ -120,6 +122,37 @@ Data: 2026-10-11. Stato: **bozza, da verificare.**
 2. App Swift minima: AVAudioEngine passthrough con buffer da 128 frame, stessa misura.
 3. Collegare l'iPhone in verticale come Continuity Camera e controllare quale risoluzione e orientamento arrivano in Chrome (`getSettings()`) e in AVFoundation.
 4. Se Chrome resta sotto i ~20 ms e lei non percepisce il ritardo → PWA (b). Altrimenti → nativo (d).
+
+## Esiti verifica ticket #3
+
+### 1. Latenza mic integrato → cuffie a filo con cpal/CoreAudio (M1, buffer 64–128)
+- **Non confermato** per cpal: nessuna misura pubblicata trovata. Il README di cpal indica solo `BufferSize::Fixed(n)` e dice che buffer piccoli riducono la latenza ma aumentano il rischio di glitch; non dice se CoreAudio rispetta il valore. Fonte: https://github.com/RustAudio/cpal
+- Dato generale CoreAudio (non cpal): circa 8,3 ms misurati a 64 frame/48 kHz, +~2 ms ogni 32 frame (MathWorks, https://www.mathworks.com/help/audio/ug/measure-audio-latency.html). Il round trip è circa due buffer più latenza del device e safety offset (JUCE, https://forum.juce.com/t/macos-round-trip-latency/45278). Un utente Max riporta +~15 ms con mic e altoparlanti integrati rispetto a uscita line-out (https://cycling74.com/forums/max-coreaudio-round-trip-latency).
+- Stima ragionevole, **non misurata**: ~8–15 ms con 64–128 frame. Va misurata con lo spike.
+
+### 2. Registrazione MP4 in WKWebView (macOS 26) con overlay su canvas
+- Safari/WebKit: MediaRecorder produce MP4 con H.264 + AAC, `isTypeSupported` per il rilevamento, e accetta qualsiasi MediaStreamTrack, inclusi quelli da canvas e da WebAudio. Fonte: https://webkit.org/blog/11353/mediarecorder-api/ (articolo del 2021; opzioni di bitrate non disponibili in quel momento).
+- Architettura prevista: `canvas.captureStream(30)` (frame camera + scheletro + onda disegnati sul canvas) + traccia audio da `MediaStreamAudioDestinationNode` (Web Audio) in un unico `MediaStream`. Per le tracce da canvas e WebAudio c'è conferma di principio dal blog WebKit.
+- **Non confermato** su macOS 26 / WKWebView di Tauri: nessuna fonte 2025–2026 trovata. Rischi noti: bug storico di captureStream da canvas che registrava nero su macOS 12 (https://bugs.webkit.org/show_bug.cgi?id=229611, risultato duplicato di 230613, stato attuale non verificato); frame rate variabile; sincronia A/V. Da provare nello spike.
+- Instagram/TikTok: fonti ufficiali (help.instagram.com, support.tiktok.com) **non raggiunte**. Guide di terzi concordano su MP4 H.264 + AAC, 1080x1920, 9:16, 30 fps; TikTok minimo 720x1280; AV1/VP9 non supportati; limiti di durata e dimensione discordanti. Quindi MP4 H.264/AAC di Safari dovrebbe andare, ma **non confermato** su fonte ufficiale né sul file reale.
+
+### 3. Continuity Camera nella webview
+- Requisiti Apple: iPhone XR o successivo, iOS 16+, macOS 13+, stesso Apple Account, Bluetooth e Wi-Fi attivi; verticale supportato; la pagina non indica risoluzione né fps. Fonte: https://support.apple.com/en-us/102546
+- In getUserMedia: segnalazioni di terzi dicono che compare come dispositivo, ma in un caso Electron/Chromium mostra la traccia senza frame (https://forum.obsidian.md/t/macos-continuity-camera-is-detected-by-getusermedia-but-delivers-zero-video-frames-in-obsidian/116834). **Non confermato** per WKWebView.
+- 1080x1920 verticale: un post sul forum Apple (iOS 26.6, non macOS) riporta che richiedere 1080x1920 restituisce 1920x1080 non ruotato e che `getSettings()` non corrisponde al frame mostrato (https://developer.apple.com/forums/thread/844826). **Non confermato** che arrivino frame 1080x1920; piano B: ruotare/ritagliare sul canvas.
+
+### 4. Gatekeeper su macOS 15/26 per .app non firmata o ad-hoc
+- Passi ufficiali: aprire l'app una volta (compare il blocco) → Impostazioni di Sistema > Privacy e sicurezza → "Apri comunque" → alla nuova finestra "Apri". Poi l'app resta come eccezione. Fonte: https://support.apple.com/en-us/102445 (screenshot di Sequoia; macOS 26 e password admin non menzionati).
+- Rimozione del Ctrl-clic → Apri in Sequoia e richiesta della password admin: riportati da stampa/blog (https://appleinsider.com/inside/macos-sequoia/tips/whats-changed-in-runtime-protection-for-macos-sequoia), non dalla pagina Apple. Comportamento su macOS 26 **non confermato**.
+- Quarantena via AirDrop/download: **non confermato** su fonte Apple (la guida Platform Security parla solo di "provenienza dei file scaricati": https://support.apple.com/guide/security/gatekeeper-and-runtime-protection-sec5599b66df/web). Resta l'ipotesi di bozza (browser, AirDrop, Mail sì; chiavetta USB e curl no).
+- Developer ID + notarizzazione: Apple Developer Program **99 USD/anno** (https://developer.apple.com/programs/); la pagina collega Developer ID e notarizzazione all'iscrizione. Per default Gatekeeper richiede software firmato da sviluppatore registrato e notarizzato.
+
+### 5. Reazioni macOS disattivabili per singola app?
+- **Non confermato** su fonte Apple. Fonti di terzi: l'interruttore Reazioni sta nel menu Video / Centro di Controllo (Effetti video) durante l'uso della camera e sembra valere a livello di sistema, non per app (https://community.zoom.com/t5/Meetings/Balloons-and-confetti-on-screen/m-p/140481). Le Reazioni richiedono macOS Sonoma+ su Apple silicon, oppure Continuity Camera con iPhone 12+.
+- Lato nativo, la pagina Apple su `AVCaptureDevice.reactionEffectsEnabled` è risultata vuota alla lettura; esistenza di una chiave Info.plist per il default dei gesti (`NSCameraReactionEffectGesturesEnabledDefault`) **non confermata**. In ogni caso non si può forzare il disattivo: l'app può solo avvisare l'utente.
+
+### Note aggiuntive su Tauri/WKWebView
+- Servono `NSCameraUsageDescription` e `NSMicrophoneUsageDescription`; senza, l'app va in crash all'accesso. Può servire il delegate `requestMediaCapturePermissionFor` di WKUIDelegate per far funzionare getUserMedia nella webview (fonti di terzi: https://developer.apple.com/forums/thread/134216 e https://github.com/tauri-apps/tauri/issues/2338). Se wry lo espone: non verificato.
 
 ## Fonti primarie da verificare (non consultate in questa sessione)
 
