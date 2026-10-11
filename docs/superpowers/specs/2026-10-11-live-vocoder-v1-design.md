@@ -66,9 +66,9 @@ Più il plugin `tauri-plugin-updater`, un opener per Guarda e Mostra nel Finder,
 
 | File | Cosa fa |
 |---|---|
-| `index.html` + `app.css` | Markup e CSS del prototipo `pannello-suono`, portati identici. |
-| `ui.js` | Stato e interazioni della schermata (§7), copiati dal prototipo. |
-| `mani.js` | Camera → MediaPipe → conto delle dita → Nota e Intensità (§4). |
+| `index.html` | Markup e CSS del prototipo `pannello-suono`, portati identici (CSS dentro la pagina, come nel prototipo). |
+| `ui.js` | Stato e interazioni della schermata (§7), copiati dal prototipo. Dati e regole stanno in moduli piccoli (`accordo.js`, `manopole.js`, `canzoni.js`), più `motore.js`, `camera.js`, `avvisi.js`, `guida.js`: elenco completo nel piano. |
+| `mani.js` | Camera → MediaPipe → conto delle dita → Nota e Intensità (§4). Dalla Nota la pagina calcola le frequenze che suonano (`accordo.js`, le stesse dell'onda) e la quota d'Effetto, e manda a Rust solo quelle. |
 | `video.js` | Il canvas che si vede e si registra (§5). È la funzione `draw()` del prototipo. |
 | `registra.js` | PCM → AudioWorklet → MediaRecorder → pezzi a Rust (§6). |
 
@@ -77,7 +77,7 @@ Più il plugin `tauri-plugin-updater`, un opener per Guarda e Mostra nel Finder,
 ```
 Microfono ─cpal─▶ ring ─▶ suono.rs ─┬─▶ × Volume in cuffia ─cpal─▶ Cuffie (Ascolto)
                                     └─▶ Channel PCM ─▶ AudioWorklet ─▶ MediaStreamDestination ─┐
-Camera ─getUserMedia─▶ MediaPipe (mani.js) ─▶ Nota, Intensità ─invoke set()─▶ suono.rs          │
+Camera ─getUserMedia─▶ MediaPipe (mani.js) ─▶ note e quota d'Effetto ─invoke set()─▶ suono.rs   │
                  └──▶ video.js (canvas) ─captureStream(30)─────────────────────────────────────┴─▶ MediaRecorder MP4 ─▶ pezzi ogni 1 s ─▶ registrazioni.rs ─▶ file
 ```
 
@@ -161,7 +161,7 @@ Gamme, gradini, nomi e testi del display sono quelli del prototipo (`KN`, `EFF`,
 
 ## 4. Gesti
 
-`mani.js`, nel webview: camera → MediaPipe Hand Landmarker (modalità VIDEO, 2 mani, 30 fps) sul **fotogramma intero** della camera → conto delle dita → `set('nota', 1–5 | 0)` e `set('intensita', 1–5)` verso Rust.
+`mani.js`, nel webview: camera → MediaPipe Hand Landmarker (modalità VIDEO, 2 mani, 30 fps) sul **fotogramma intero** della camera → conto delle dita → Nota (1–5, 0 = accordi fermi) e Intensità (1–5). Verso Rust vanno le frequenze delle note che suonano (`set_note`, lista vuota = accordi fermi) e la quota d'Effetto (`set('wet', …)`).
 
 - **Dita alzate:** si conta quante dita sono alzate, da 1 a 5, pollice compreso; quali dita non conta. Il test è quello di Londopy e non dipende dalla rotazione della mano: la punta deve essere più lontana dal polso della PIP × 1,25 **e** l'angolo MCP-PIP-punta deve superare i 150°. Il pollice è alzato se la sua punta dista più di 1,1 palmi dalla nocca del mignolo. 0 dita = pugno.
 - **Debounce di 90 ms:** un conteggio nuovo vale solo se resta stabile per 90 ms.
@@ -292,17 +292,20 @@ Una Canzone salva: nome, le 5 Note, Modalità, Formato, Effetto, tutte le manopo
   "dispositivi": { "ingresso": "…", "uscita": "…", "camera": "…" },
   "aperta": "Ma Lei",
   "canzoni": [{
-    "nome": "Ma Lei",
-    "note": [{ "base": 0, "tipo": "M", "ottava": 0 }, …],
-    "modalita": "accordi", "formato": "verticale", "effetto": "coro",
-    "suono": { "i1": 60, "i5": 90, "voci": 4, "scivola": 0, "timbro": "supersaw", "bande": 24,
+    "name": "Ma Lei",
+    "data": {
+      "beads": [{ "r": 0, "t": "M", "o": 0 }, …],
+      "mode": "accordi", "format": "verticale", "eff": "coro",
+      "snd": { "i1": 60, "i5": 90, "voci": 4, "scivola": 0, "timbro": "supersaw", "bande": 24,
                "morb": 0, "cons": 15, "gate": -75, "vol": 2 },
-    "titolo": true, "filtro": true, "specchio": true, "conto": true, "mano": "sinistra"
-  }]
+      "titolo": true, "filtro": true, "specchio": true, "conto": true, "mano": "sinistra"
+    }
+  }],
+  "guidaVista": true
 }
 ```
 
-`base` va da 0 (Do) a 11 (Si). `tipo` è uno tra `M`, `m`, `s7`, `maj7`, `sus`. `ottava` è −1 / 0 / 1 per Bassa / Media / Alta.
+Le chiavi sono quelle del prototipo, così lo script si porta senza rinominare. `r` è la Base, da 0 (Do) a 11 (Si). `t` è il Tipo, uno tra `M`, `m`, `s7`, `maj7`, `sus`. `o` è l'ottava: −1 / 0 / 1 per Bassa / Media / Alta. `scivola` è in ms, `gate` in dB (−75 = spento).
 
 ### Menu "Canzone: Ma Lei ▾"
 
@@ -315,6 +318,7 @@ Una Canzone salva: nome, le 5 Note, Modalità, Formato, Effetto, tutte le manopo
 - **Regole del nome** (il nome diventa una cartella):
   - non vuoto, massimo 40 caratteri;
   - senza `/` e `:`;
+  - non inizia con un punto (sarebbe una cartella nascosta, o fuori dalla cartella con `..`);
   - unico, senza distinguere maiuscole e minuscole.
 
   Gli errori compaiono sotto la casella con i testi del prototipo.
@@ -365,10 +369,15 @@ Decisi in #8 e confermati in #12. Niente Developer ID.
 **Automatici:**
 - `cargo test --release`:
   - i test del prototipo: il Coro sente la nota e la sposta, il Vocoder pareggia il volume e tace senza Voce, il gate taglia il fruscio, il Coro sceglie l'ottava vicina;
-  - in più: le note dell'accordo per ogni Tipo, con la 7ª al posto della 5ª, la Pienezza 3/4/5 e la Nota singola;
+  - in più: `near` per accordi e Nota singola, Dettaglio che cambia senza allocare, accordi fermi = Voce pulita, tetto del limitatore;
   - la scelta del nome `vN`, con la cartella vuota, i buchi nella numerazione e il nome rinominato;
-  - le regole del nome della Canzone.
-- In JS un solo controllo eseguibile: il conto delle dita (0–5) e l'assegnazione delle mani su gruppi fissi di 21 punti.
+  - `canzoni.json` scritto senza lasciarlo a metà e messo da parte se rotto;
+  - il tipo d'uscita dei Dispositivi.
+- `node --test` (logica JS, dove sta il codice):
+  - le note dell'accordo per ogni Tipo, con la 7ª al posto della 5ª, la Pienezza 3/4/5 e la Nota singola;
+  - le regole del nome della Canzone e la lettura di `canzoni.json` rotto o vecchio;
+  - la scelta del Dispositivo quando sparisce e ricompare;
+  - il conto delle dita (0–5, anche a mano ruotata), l'assegnazione delle mani e il debounce.
 
 **A mano sul Mac di prova**, prima della beta:
 - schermata identica al prototipo a 1440×820 e a 1280×720;
