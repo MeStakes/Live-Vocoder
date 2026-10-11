@@ -25,7 +25,7 @@ Il tempo tra quando Keopees canta e quando sente l'Ascolto in cuffia. Deve esser
 _Avoid_: latenza, delay, lag
 
 **Registrazione**:
-Un file video con audio trattato, girato dentro l'app e salvato nella cartella Download del Mac.
+Un file video con audio trattato, girato dentro l'app. Finisce nella cartella delle Registrazioni scelta da Keopees, in una sottocartella per ogni Canzone, numerato senza mai sovrascrivere ("Ma Lei v1", "Ma Lei v2"…).
 _Avoid_: take, clip, export
 
 **Formato**:
@@ -41,5 +41,9 @@ Livello da 1 a 5 scelto dalle dita alzate della seconda mano. Con il vocoder acc
 _Avoid_: volume, gain, mix
 
 **Canzone**:
-Un brano di Keopees salvato nell'app: il nome e le sue 5 Perline. Il nome è il titolo che può comparire nel video accanto all'accordo.
+Un brano di Keopees salvato nell'app: il nome, le sue 5 Perline e tutte le Impostazioni con cui lo registra. Il nome è il titolo che può comparire nel video accanto all'accordo.
 _Avoid_: preset, set, progetto
+
+**Impostazioni**:
+Le scelte di una Canzone raccolte dietro un unico pulsante: vocoder, titolo nel video, filtro, specchio, conto alla rovescia, mano degli accordi. Fa eccezione la cartella delle Registrazioni, che vale per tutte le Canzoni.
+_Avoid_: preferenze, opzioni, settings
