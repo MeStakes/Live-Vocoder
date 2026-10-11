@@ -368,6 +368,13 @@ async function fermaRegistrazione(motivo) {
   ]);
 }
 
+// Aggiornamento (spec §10): solo su richiesta, mai durante una Registrazione.
+async function aggiorna() {
+  if (st.ui.rec) return avviso('aggiorna', "Finisci la Registrazione, poi premi di nuovo Aggiorna.", [['Aggiorna', aggiorna]]);
+  avviso('aggiorna', 'Sto aggiornando Live Vocoder… si riapre da sola.');
+  await invoke('aggiorna').catch(() => avviso('aggiorna', "L'aggiornamento non è andato: riprova più tardi.", [['Riprova', aggiorna]]));
+}
+
 async function avvio() {
   const c = await carica();
   dati = c.dati; songs = dati.canzoni; st.dev = dati.dispositivi;
@@ -381,5 +388,7 @@ async function avvio() {
   setInterval(controllaDispositivi, 2000);
   requestAnimationFrame(frame);
   avviaMani(camVideo, () => st.mano, suMani).catch(e => avviso('mani', `Non riesco a leggere le mani: ${e}`));
+  // senza rete non dice niente: si riprova al prossimo avvio
+  invoke('controlla_aggiornamento').then(v => v && avviso('aggiorna', `C'è una versione nuova ✨ (${v})`, [['Aggiorna', aggiorna], ['Più tardi', () => {}]]), () => {});
 }
 avvio();

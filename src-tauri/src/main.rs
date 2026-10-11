@@ -1,4 +1,5 @@
 // Live Vocoder: app Mac per Keopees (spec docs/superpowers/specs/2026-10-11-live-vocoder-v1-design.md).
+mod aggiorna;
 mod audio;
 mod camera;
 mod canzoni;
@@ -9,6 +10,7 @@ mod suono;
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(audio::Audio::default())
         .manage(registrazioni::Reg::default())
         .invoke_handler(tauri::generate_handler![
@@ -19,6 +21,7 @@ fn main() {
             registrazioni::apri_registrazione, registrazioni::aggiungi_pezzo, registrazioni::chiudi_registrazione,
             registrazioni::spazio_libero, registrazioni::guarda, registrazioni::mostra, registrazioni::butta,
             registrazioni::scegli_cartella, registrazioni::cartella_predefinita,
+            aggiorna::controlla_aggiornamento, aggiorna::aggiorna,
         ])
         .run(tauri::generate_context!())
         .expect("avvio di Live Vocoder");
