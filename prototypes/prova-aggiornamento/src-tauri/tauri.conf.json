@@ -1,0 +1,25 @@
+{
+  "productName": "Prova Aggiornamento",
+  "version": "0.1.0",
+  "identifier": "com.mestakes.prova-aggiornamento",
+  "build": { "frontendDist": "../src" },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [{ "title": "Prova Aggiornamento (PROTOTIPO usa e getta)", "width": 760, "height": 640 }],
+    "security": { "csp": null }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["app", "dmg"],
+    "icon": ["icons/icon.icns", "icons/icon.png"],
+    "createUpdaterArtifacts": true,
+    "macOS": { "signingIdentity": "Live Vocoder Prova", "hardenedRuntime": false }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "la mette prova.sh",
+      "endpoints": ["http://localhost:8765/latest.json"],
+      "dangerousInsecureTransportProtocol": true
+    }
+  }
+}

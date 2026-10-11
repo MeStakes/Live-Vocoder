@@ -1,0 +1,6 @@
+{
+  "name": "prova-aggiornamento",
+  "private": true,
+  "scripts": { "prova": "sh prova.sh" },
+  "devDependencies": { "@tauri-apps/cli": "2.12.2" }
+}

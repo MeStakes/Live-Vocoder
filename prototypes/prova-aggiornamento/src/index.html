@@ -1,0 +1,33 @@
+<!doctype html>
+<!-- PROTOTIPO usa e getta, ticket "Prova dell'aggiornamento senza firma Apple" (#12). -->
+<meta charset="utf-8">
+<style>
+  body { font: 16px -apple-system, sans-serif; margin: 24px; background: #fff; color: #222; }
+  h1 { font-size: 44px; margin: 0 0 12px; }
+  pre { background: #f4f0f8; padding: 12px; white-space: pre-wrap; font-size: 13px; }
+  button { font-size: 18px; padding: 8px 18px; }
+</style>
+<h1 id="ver">Versione …</h1>
+<button id="agg">Aggiorna</button>
+<pre id="out"></pre>
+<script>
+  const { invoke } = window.__TAURI__.core;
+  const $ = (id) => document.getElementById(id);
+  const say = (s) => ($('out').textContent += s + '\n');
+  (async () => {
+    $('ver').textContent = 'Versione ' + (await window.__TAURI__.app.getVersion());
+    say(await invoke('stato'));
+    // Chiede Camera e Microfono a ogni avvio: se macOS mostra di nuovo il permesso, la prova fallisce.
+    for (const k of ['video', 'audio']) {
+      try {
+        const s = await navigator.mediaDevices.getUserMedia({ [k]: true });
+        say(`${k === 'video' ? 'Camera' : 'Microfono'}: ok (${s.getTracks()[0].label})`);
+        s.getTracks().forEach((t) => t.stop());
+      } catch (e) { say(`${k === 'video' ? 'Camera' : 'Microfono'}: ERRORE ${e}`); }
+    }
+  })();
+  $('agg').onclick = async () => {
+    say('controllo aggiornamento…');
+    try { say(await invoke('aggiorna')); } catch (e) { say('ERRORE ' + e); }
+  };
+</script>
