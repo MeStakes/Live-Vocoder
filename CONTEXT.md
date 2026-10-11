@@ -39,3 +39,7 @@ _Avoid_: slot, preset, pad
 **Intensità**:
 Livello da 1 a 5 scelto dalle dita alzate della seconda mano. Con il vocoder acceso è quanto vocoder si sente rispetto alla Voce pulita; spento è il volume degli accordi.
 _Avoid_: volume, gain, mix
+
+**Canzone**:
+Un brano di Keopees salvato nell'app: il nome e le sue 5 Perline. Il nome è il titolo che può comparire nel video accanto all'accordo.
+_Avoid_: preset, set, progetto
