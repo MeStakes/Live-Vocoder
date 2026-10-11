@@ -7,6 +7,7 @@ import * as motore from './motore.js';
 import { avviso, stato } from './avvisi.js';
 import { parametriRust, scegli } from './manopole.js';
 import { apriCamera } from './camera.js';
+import { avviaMani } from './mani.js';
 const invoke = (...a) => window.__TAURI__.core.invoke(...a);
 
 let dati = datiIniziali(), songs = dati.canzoni;
@@ -170,7 +171,7 @@ document.addEventListener('click', e => {
   if (a === 'format') { st.format = v; controllaDispositivi(); }
   if (a === 'mano') st.mano = v;
   if (a === 'sw') st[v] = !st[v];
-  if (a === 'bead') { st.edit = st.edit === +v ? -1 : +v; if (st.edit >= 0) st.i = st.edit; }
+  if (a === 'bead') { st.edit = st.edit === +v ? -1 : +v; if (st.edit >= 0) { st.i = st.edit; st.fermi = false; } }
   if (a === 'done') st.edit = -1;
   if (ed && a === 'root') ed.r = +v;
   if (ed && a === 'type') ed.t = v;
@@ -181,7 +182,6 @@ document.addEventListener('click', e => {
   if (a === 'panel') u.panel = v;
   if (a === 'close') u.panel = null;
   if (a === 'desk') u.desk = !u.desk;
-  lastCycle = performance.now();
   build();
 });
 document.addEventListener('input', e => { if (e.target.id === 'song-name') st.ui.draft = e.target.value; });
@@ -225,10 +225,8 @@ document.addEventListener('keydown', e => {
 
 // --- video: il canvas che si vede nella polaroid e che si registra (video.js), ~30 fotogrammi al secondo come captureStream(30)
 const camVideo = $('#cam'), cv = $('canvas');
-let lastCycle = performance.now(), lastLv = performance.now(), ultimoDisegno = 0;
+let ultimoDisegno = 0;
 function frame(now) {
-  if (st.edit < 0 && now - lastCycle > 2600) { st.i = (st.i + 1) % st.beads.length; lastCycle = now; paint(); } // simulazione: via con i Gesti
-  if (now - lastLv > 3700) { st.lv = st.lv % 5 + 1; lastLv = now; paint(); } // simulazione: via con i Gesti
   if (now - ultimoDisegno >= 30) {
     ultimoDisegno = now;
     const [W, H] = misura(st.format);
@@ -285,6 +283,17 @@ function controllaDispositivi() {
   })().finally(() => (giroDisp = null)));
 }
 
+// Gesti: si cambia solo quando cambiano le dita, così un clic su una Nota resta finché la mano non fa altro.
+// Mano degli accordi: 1–5 = Nota, 0 = accordi fermi. Seconda mano: 1–5 = Intensità; pugno o fuori campo tengono l'ultima.
+const ultima = { nota: null, dita2: null };
+function suMani({ mani, nota, dita2 }) {
+  st.mani = mani;
+  let cambia = false;
+  if (nota !== ultima.nota) { ultima.nota = nota; st.fermi = nota === 0; if (nota) st.i = nota - 1; cambia = true; }
+  if (dita2 !== ultima.dita2) { ultima.dita2 = dita2; if (dita2) { st.lv = dita2; cambia = true; } }
+  if (cambia) paint();
+}
+
 async function avvio() {
   const c = await carica();
   dati = c.dati; songs = dati.canzoni; st.dev = dati.dispositivi;
@@ -294,5 +303,6 @@ async function avvio() {
   await controllaDispositivi();
   setInterval(controllaDispositivi, 2000);
   requestAnimationFrame(frame);
+  avviaMani(camVideo, () => st.mano, suMani).catch(e => avviso('mani', `Non riesco a leggere le mani: ${e}`));
 }
 avvio();
