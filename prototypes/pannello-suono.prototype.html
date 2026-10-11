@@ -1,0 +1,657 @@
+<title>Pannello del Suono</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&family=Nunito:wght@400;700;800&family=Pacifico&display=swap">
+<style>
+/* PROTOTIPO usa-e-getta, ticket "Pannello del Suono" (#14).
+   Tre varianti di dove stanno Effetto e manopole del Suono nella schermata Poster, sulla stessa pagina:
+   A = Cassetto (tutto dentro Impostazioni), B = Sul poster (Suono sempre in vista), C = Banco (manopole in fondo).
+   Si cambia con la barra in basso, con ← → o con #A #B #C nell'indirizzo (gli artifact non passano ?variant=).
+   Camera e suono simulati: nessun audio. Partito dal prototipo "Stile grafico" (variante Poster). */
+:root{
+  /* Layout: finestra Mac; a sinistra titolo, Canzone, ruota di perline; a destra video-polaroid e comandi; il Suono cambia posto per variante */
+  --rosa:#FF4F9A; --rosa-chiaro:#FF8FC4; --confetto:#FFD3E7;
+  --viola:#6B2BD9; --viola-luce:#A27BFF;
+  --prugna:#2B1145; --prugna-2:#43205F; --prugna-tenue:#6A4D7F; --notte:#1A0A2B;
+  --crema:#FFF0D9; --lilla:#DCC6FF;
+  --bordo:rgb(255 240 217 / .12); --ombra:rgb(10 2 20 / .65);
+  --tl-r:#FF5F57; --tl-g:#FEBC2E; --tl-v:#28C840;
+  --f-titolo:"Pacifico","Brush Script MT",cursive;
+  --f-etichetta:"Amatic SC","Arial Narrow",sans-serif;
+  --f-testo:"Nunito","Avenir Next",system-ui,sans-serif;
+  --retro:.025em .025em 0 var(--rosa-chiaro),.05em .05em 0 var(--rosa-chiaro),.075em .075em 0 var(--rosa-chiaro),.11em .11em .05em rgb(43 17 69 / .25);
+  --perla:radial-gradient(circle at 35% 30%,var(--viola-luce),var(--viola) 75%);
+  --perla-rosa:radial-gradient(circle at 35% 30%,var(--rosa-chiaro),var(--rosa) 75%);
+  --ar:9/16; --arn:.5625;
+  color-scheme:dark;
+}
+:root[data-format="orizzontale"]{--ar:16/9;--arn:1.7778}
+body{background:var(--notte);color:var(--crema);font:16px/1.45 var(--f-testo);padding-inline:16px;padding-block:20px 96px}
+.intro,.state{max-width:1180px;margin:0 auto 16px;color:var(--confetto);font-size:.95rem}
+.intro b{color:var(--crema)}
+.state{margin:14px auto 0;font-size:.82rem}
+[hidden]{display:none!important}
+[data-act]{cursor:pointer}
+[data-act]:focus-visible,input:focus-visible,.knob:focus-visible{outline:2px solid var(--viola);outline-offset:3px}
+button:disabled{opacity:.45;cursor:default}
+
+.win{max-width:1180px;margin-inline:auto;border-radius:14px;overflow:hidden;border:1px solid var(--bordo);box-shadow:0 30px 80px -30px var(--ombra)}
+.titlebar{display:flex;gap:8px;padding:11px 14px;background:var(--notte)}
+.titlebar i{width:12px;height:12px;border-radius:50%;background:var(--tl-r)}
+.titlebar i:nth-child(2){background:var(--tl-g)} .titlebar i:nth-child(3){background:var(--tl-v)}
+
+.body{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:36px;padding:32px;background:var(--confetto);color:var(--prugna)}
+.left,.right{display:flex;flex-direction:column;gap:20px;min-width:0}
+.right{align-items:center}
+.poster{margin:0;font:400 clamp(3.4rem,9vw,6.4rem)/1.05 var(--f-titolo);color:var(--viola);text-shadow:var(--retro)}
+.sign{display:flex;align-items:center;gap:16px}
+.by{font:700 1.6rem/1 var(--f-etichetta);letter-spacing:.14em;text-transform:uppercase}
+.app-icon{--s:72px;flex:none;width:var(--s);height:var(--s);box-sizing:border-box;padding-bottom:calc(var(--s)*.06);border-radius:calc(var(--s)*.225);background:linear-gradient(var(--rosa-chiaro),var(--rosa));display:grid;place-items:center;font:400 calc(var(--s)*.52)/1 var(--f-titolo);color:var(--viola);text-shadow:.025em .025em 0 var(--crema),.05em .05em 0 var(--crema),.075em .075em 0 var(--crema),.11em .11em .05em var(--ombra)}
+.song{all:unset;align-self:flex-start;cursor:default;padding:8px 18px;border-radius:999px;background:var(--crema);font-weight:800;box-shadow:inset 0 0 0 2px var(--rosa-chiaro)}
+.song b{font:400 1.1rem/1 var(--f-titolo);color:var(--rosa)}
+
+/* ruota-braccialetto: perline viola, quella suonata rosa */
+.wheel{position:relative;width:min(100%,260px);aspect-ratio:1;container-type:size}
+.wheel::before{content:"";position:absolute;inset:15cqw;border-radius:50%;border:2px solid var(--rosa-chiaro)}
+.wheel button{all:unset;position:absolute;left:50%;top:50%;width:25cqw;height:25cqw;margin:-12.5cqw;border-radius:50%;display:grid;place-content:center;text-align:center;background:var(--perla);color:var(--crema);box-shadow:inset -3px -3px 6px rgb(43 17 69 / .3);transform:rotate(var(--a)) translateY(-35cqw) rotate(calc(-1 * var(--a)));transition:box-shadow .15s}
+.wheel button b{font:400 6cqw/1.25 var(--f-titolo);white-space:nowrap}
+.wheel button small{font-size:3.8cqw;font-weight:800}
+.wheel button.on{background:var(--perla-rosa);box-shadow:0 0 22px var(--rosa)}
+.wheel button.editing{box-shadow:0 0 0 4px var(--crema),0 0 0 7px var(--viola)}
+.core{position:absolute;inset:34%;display:grid;place-items:center;text-align:center;font:400 9cqw/1.1 var(--f-titolo);color:var(--rosa)}
+.hint{margin:-8px 0 0;font-size:.85rem;font-weight:700}
+
+/* pannelli crema (editor della perlina, Suono della variante B) */
+.editor,.snd{display:flex;flex-direction:column;gap:12px;padding:16px 18px;border-radius:24px;background:var(--crema);box-shadow:0 0 0 2px var(--rosa-chiaro),0 18px 36px -24px var(--viola)}
+.editor h2{margin:0;font-size:1rem;font-weight:800}
+.editor h2 b{font:400 1.3rem/1 var(--f-titolo);color:var(--rosa)}
+.row{display:flex;flex-direction:column;gap:6px}
+.row > span{font-size:.8rem;font-weight:800;color:var(--viola)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button,.done{all:unset;cursor:pointer;padding:6px 12px;border-radius:999px;font-size:.85rem;font-weight:800;background:var(--confetto);color:var(--prugna);box-shadow:inset 0 0 0 2px var(--lilla)}
+.chips button[aria-pressed="true"]{background:var(--viola);color:var(--crema);box-shadow:none}
+.done{align-self:flex-start;padding:8px 20px;background:var(--rosa);color:var(--crema);box-shadow:none}
+
+/* comuni */
+.pill{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border-radius:999px;background:var(--crema);color:var(--prugna);font-weight:800;font-size:.9rem;box-shadow:inset 0 0 0 2px var(--rosa-chiaro)}
+.pill.main{background:var(--viola);color:var(--crema);box-shadow:none}
+.tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.tiny{font-size:.8rem;font-weight:700;color:var(--prugna-tenue)}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;padding:4px;border-radius:999px;background:var(--crema);box-shadow:inset 0 0 0 2px var(--rosa-chiaro)}
+.seg button{all:unset;cursor:pointer;text-align:center;padding:10px 12px;border-radius:999px;font-weight:800;font-size:.9rem;color:var(--prugna)}
+.seg button[aria-pressed="true"]{background:var(--viola);color:var(--crema)}
+.lbl{font-size:.8rem;font-weight:800;color:var(--viola)}
+input[type=range]{width:100%;margin:0;accent-color:var(--viola)}
+.lvrow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}
+.lvrow span{display:flex;flex-direction:column;align-items:center;padding:4px 0;border-radius:12px;background:var(--confetto);font-size:.7rem;font-weight:800;line-height:1.2}
+.lvrow b{font-size:.85rem;font-variant-numeric:tabular-nums}
+.lvrow span.on{background:var(--rosa);color:var(--crema)}
+.only{font-size:.68rem;font-weight:800;padding:2px 8px;border-radius:999px;background:var(--lilla);color:var(--prugna);white-space:nowrap}
+.reset{all:unset;cursor:pointer;align-self:flex-start;padding:8px 16px;border-radius:999px;font-weight:800;font-size:.85rem;color:var(--viola);box-shadow:inset 0 0 0 2px var(--viola)}
+
+/* interruttori delle Impostazioni video */
+.vset{display:flex;flex-direction:column;gap:14px}
+.vrow{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:.9rem;font-weight:800}
+.vrow b{font-weight:700;color:var(--prugna-tenue)}
+.switch{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:8px;font-size:.9rem;font-weight:800;color:var(--prugna)}
+.track{position:relative;flex:none;width:42px;height:24px;border-radius:999px;background:var(--crema);box-shadow:inset 0 0 0 2px var(--rosa-chiaro);transition:background .15s}
+.track::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--rosa-chiaro);transition:transform .15s}
+.switch[aria-checked="true"] .track{background:var(--viola);box-shadow:none}
+.switch[aria-checked="true"] .track::after{transform:translateX(18px);background:var(--crema)}
+#titolo{width:11rem;max-width:100%;padding:6px 12px;border:0;border-radius:999px;background:var(--confetto);color:var(--prugna);font:400 1rem/1.3 var(--f-titolo);box-shadow:inset 0 0 0 2px var(--rosa-chiaro)}
+
+/* pannello laterale (Impostazioni, Guida) */
+.scrim{position:absolute;inset:0;z-index:5;background:rgb(26 10 43 / .35)}
+.sheet{position:absolute;top:0;right:0;bottom:0;z-index:6;width:min(440px,100%);box-sizing:border-box;overflow-y:auto;display:flex;flex-direction:column;gap:16px;padding:22px 22px 28px;background:var(--crema);color:var(--prugna);box-shadow:-20px 0 50px -20px var(--ombra)}
+.sheet h2{margin:0;padding-right:40px;font:400 1.9rem/1.1 var(--f-titolo);color:var(--viola)}
+.x{all:unset;cursor:pointer;position:absolute;top:16px;right:16px;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--confetto);font-weight:800;font-size:1.2rem}
+.ctx,.note{margin:0;font-size:.85rem}
+.list{display:flex;flex-direction:column;gap:3px;border-radius:20px;overflow:hidden}
+.item{display:flex;flex-direction:column;gap:7px;padding:12px 14px;background:var(--confetto)}
+.item .top,.kn .top{display:flex;align-items:center;gap:8px;font-weight:800;font-size:.9rem}
+.item output,.kn output{margin-left:auto;color:var(--viola);font-variant-numeric:tabular-nums;text-align:right}
+.item p{margin:0;font-size:.8rem;color:var(--prugna-tenue)}
+.gl{margin:0;display:grid;gap:4px 0}
+.gl dt{font-weight:800;color:var(--viola);margin-top:8px}
+.gl dd{margin:0;font-size:.88rem}
+
+/* B: Suono sempre in vista sul poster */
+.snd-head{display:flex;align-items:center;gap:12px}
+.snd h3{margin:0;font:400 1.7rem/1 var(--f-titolo);color:var(--viola)}
+.snd-head .reset{margin-left:auto}
+.effs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.eff{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 6px;border-radius:20px;text-align:center}
+.eff i{width:44px;height:44px;border-radius:50%;background:var(--perla);box-shadow:inset -3px -3px 6px rgb(43 17 69 / .3)}
+.eff b{font:400 1.2rem/1 var(--f-titolo);color:var(--viola)}
+.eff small{font-size:.72rem;font-weight:700;line-height:1.25}
+.eff[aria-pressed="true"]{background:var(--confetto)}
+.eff[aria-pressed="true"] i{background:var(--perla-rosa);box-shadow:0 0 18px var(--rosa)}
+.kn{display:flex;flex-direction:column;gap:6px}
+.kn.off{opacity:.45}
+.q{all:unset;cursor:pointer;flex:none;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:.72rem;font-weight:800;background:var(--lilla);color:var(--prugna)}
+.tip{margin:0;padding:8px 12px;border-radius:14px;background:var(--confetto);font-size:.8rem}
+.more{all:unset;cursor:pointer;align-self:flex-start;font-weight:800;font-size:.9rem;color:var(--viola);text-decoration:underline;text-underline-offset:4px}
+.bracelet{-webkit-appearance:none;appearance:none;height:24px;background:radial-gradient(circle,var(--lilla) 3px,transparent 3.5px) 0 50%/14px 14px repeat-x,linear-gradient(var(--rosa-chiaro),var(--rosa-chiaro)) 0 50%/100% 2px no-repeat}
+.bracelet::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:var(--perla-rosa);border:2px solid var(--crema);box-shadow:0 0 10px var(--rosa)}
+.bracelet::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--perla-rosa);border:2px solid var(--crema);box-shadow:0 0 10px var(--rosa)}
+
+/* C: banco del Suono, a tutta larghezza sotto la finestra */
+.desk{padding:14px 24px 22px;background:var(--prugna);color:var(--crema);border-top:3px dashed var(--rosa-chiaro)}
+.desk-head{display:flex;align-items:center;gap:12px 16px;flex-wrap:wrap}
+.desk-head h3{margin:0;font:400 1.6rem/1 var(--f-titolo);color:var(--rosa-chiaro)}
+.lcd{flex:1 1 280px;min-width:0;margin:0;padding:8px 14px;border-radius:12px;background:var(--notte);color:var(--confetto);font-size:.82rem;min-height:2.6em;display:flex;align-items:center}
+.pill.dark{background:transparent;color:var(--crema);box-shadow:inset 0 0 0 2px var(--rosa-chiaro)}
+.desk-body{display:flex;flex-wrap:wrap;gap:18px 30px;margin-top:16px;align-items:flex-start}
+.grp{display:flex;flex-direction:column;gap:10px}
+.grp > span{font:700 1.2rem/1 var(--f-etichetta);letter-spacing:.14em;text-transform:uppercase;color:var(--rosa-chiaro)}
+.grp > div{display:flex;gap:10px}
+.grp .lvrow span{background:var(--prugna-2);color:var(--crema)}
+.grp .lvrow span.on{background:var(--rosa)}
+.knob{display:flex;flex-direction:column;align-items:center;gap:5px;width:78px;text-align:center;cursor:ns-resize;touch-action:none;user-select:none;border-radius:12px}
+.dial{--p:.5;position:relative;width:58px;height:58px;border-radius:50%;background:conic-gradient(from 225deg,var(--rosa) calc(var(--p) * 270deg),rgb(255 240 217 / .15) 0 270deg,transparent 0)}
+.dial::before{content:"";position:absolute;inset:7px;border-radius:50%;background:var(--perla);box-shadow:inset -3px -3px 6px rgb(26 10 43 / .4)}
+.dial::after{content:"";position:absolute;left:50%;top:50%;width:3px;height:19px;margin:-19px 0 0 -1.5px;border-radius:2px;background:var(--crema);transform-origin:50% 100%;transform:rotate(calc(-135deg + var(--p) * 270deg))}
+.knob b{font-size:.72rem;font-weight:800;line-height:1.2}
+.knob output{font-size:.72rem;color:var(--confetto);font-variant-numeric:tabular-nums}
+.knob.off{opacity:.35}
+.knob .only{font-size:.6rem;white-space:normal;line-height:1.2;text-align:center}
+.effknob{display:flex;align-items:center;gap:12px}
+.effknob .dial{all:unset;cursor:pointer;--p:.5;position:relative;width:72px;height:72px;border-radius:50%;background:rgb(255 240 217 / .15)}
+.effknob .dial::before{content:"";position:absolute;inset:6px;border-radius:50%;background:var(--perla-rosa)}
+.effknob .dial::after{content:"";position:absolute;left:50%;top:50%;width:4px;height:24px;margin:-24px 0 0 -2px;border-radius:2px;background:var(--crema);transform-origin:50% 100%;transform:rotate(calc(-135deg + var(--p) * 270deg))}
+.effnames{display:flex;flex-direction:column;gap:4px}
+.effnames button{all:unset;cursor:pointer;font-weight:800;font-size:.85rem;color:rgb(255 240 217 / .55)}
+.effnames button[aria-pressed="true"]{color:var(--rosa-chiaro)}
+
+/* video */
+.polaroid{position:relative;width:100%;box-sizing:border-box;padding:16px 16px 0;background:var(--crema);border-radius:6px;box-shadow:0 24px 50px -24px var(--ombra)}
+.polaroid::before{content:"";position:absolute;top:-14px;left:50%;width:120px;height:30px;margin-left:-60px;background:var(--rosa-chiaro);opacity:.85;transform:rotate(3deg)}
+.frame{position:relative;aspect-ratio:var(--ar);width:min(100%,calc(52vh * var(--arn)));max-width:100%;margin-inline:auto;border-radius:4px;overflow:hidden;outline:2px dashed var(--rosa);outline-offset:6px}
+.frame canvas{display:block;width:100%;height:100%}
+.cap{margin:0;padding:14px 0 12px;text-align:center;font:700 1.4rem/1.1 var(--f-etichetta)}
+.dock{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;align-items:center}
+.rec{all:unset;cursor:pointer;display:flex;align-items:center;gap:10px;padding:16px 22px;border-radius:999px;background:var(--rosa);color:var(--crema);font-weight:800;font-size:1.1rem;box-shadow:0 12px 30px -12px var(--rosa)}
+.rec::before{content:"";width:14px;height:14px;border-radius:50%;background:var(--crema)}
+.guide{all:unset;cursor:pointer;position:absolute;right:20px;bottom:20px;z-index:4;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:var(--viola);color:var(--crema);font:400 1.5rem/1 var(--f-titolo);box-shadow:0 10px 24px -10px var(--viola)}
+
+/* barra del prototipo: non fa parte del design */
+.proto-bar{position:fixed;left:50%;bottom:0;z-index:20;transform:translateX(-50%);margin-bottom:calc(14px + env(safe-area-inset-bottom, 0px));display:flex;align-items:center;gap:6px;padding:6px;border-radius:999px;background:#111;color:#fff;font:600 13px/1 ui-monospace,Menlo,monospace;box-shadow:0 10px 30px rgb(0 0 0 / .5);white-space:nowrap;max-width:calc(100vw - 32px)}
+.proto-bar button{all:unset;cursor:pointer;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:#333;font-size:16px}
+.proto-bar span{padding:0 10px;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:820px){.body{grid-template-columns:1fr;padding:20px}}
+@media (prefers-reduced-motion:reduce){.track,.track::after,.wheel button{transition:none}}
+</style>
+
+<p class="intro"><b>Pannello del Suono, prototipo.</b> Tre posti diversi per l'Effetto e le manopole del Suono: cambia variante con la barra nera in basso (o con ← →). Prova a cambiare Effetto e a muovere le manopole. Camera simulata, nessun suono.</p>
+
+<section class="win">
+  <div class="titlebar"><i></i><i></i><i></i></div>
+  <div class="body">
+    <div class="left">
+      <p class="poster">Live<br>Vocoder</p>
+      <div class="sign"><div class="app-icon">K</div><span class="by">by Keopees</span></div>
+      <button class="song" title="Menu Canzone (non attivo nel prototipo)">Canzone: <b>Ma Lei</b> ▾</button>
+      <div class="wheel" id="wheel"><div class="core" data-bind="chord">Lam</div></div>
+      <p class="hint">Tocca una perlina per cambiare accordo e ottava.</p>
+
+      <div class="editor" id="editor" hidden>
+        <h2>Perlina da <span data-bind="edDita"></span>: <b data-bind="edName"></b></h2>
+        <div class="row"><span>Nota</span><div class="chips" id="chips-root"></div></div>
+        <div class="row"><span>Tipo</span><div class="chips" id="chips-type"></div></div>
+        <div class="row"><span>Ottava</span><div class="chips" id="chips-oct"></div></div>
+        <button class="done" data-act="done">Fatto</button>
+      </div>
+
+      <div id="slot-left" class="left"></div>
+    </div>
+
+    <div class="right">
+      <div class="polaroid"><div class="frame"><canvas></canvas></div><p class="cap">questo finisce nel video ♥</p></div>
+      <div class="dock">
+        <div class="seg" role="group" aria-label="Modalità"><button data-act="mode" data-val="accordi">Accordi</button><button data-act="mode" data-val="nota">Nota singola</button></div>
+        <div class="seg" role="group" aria-label="Formato"><button data-act="format" data-val="verticale">Verticale</button><button data-act="format" data-val="orizzontale">Orizzontale</button></div>
+        <button class="rec" data-act="rec">Registra 00:00</button>
+      </div>
+    </div>
+
+    <button class="guide" data-act="panel" data-val="guida" aria-label="Guida">?</button>
+    <div id="slot-sheet"></div>
+  </div>
+  <div id="slot-bottom"></div>
+</section>
+<p class="state" data-state></p>
+
+<nav class="proto-bar" aria-label="Varianti del prototipo">
+  <button data-act="prev" aria-label="Variante precedente">‹</button><span data-bind="vlabel"></span><button data-act="next" aria-label="Variante successiva">›</button>
+</nav>
+
+<script>
+const NOTE = ['Do','Do♯','Re','Mi♭','Mi','Fa','Fa♯','Sol','La♭','La','Si♭','Si'];
+const TYPES = {M:{label:'Maggiore', suf:'', iv:[0,4,7]}, m:{label:'Minore', suf:'m', iv:[0,3,7]}, s7:{label:'Settima', suf:'7', iv:[0,4,7,10]}, sus:{label:'Sus4', suf:'sus4', iv:[0,5,7]}};
+const OCT = [[-1,'Bassa'],[0,'Media'],[1,'Alta']];
+const beads = [{r:0,t:'M',o:0},{r:9,t:'m',o:0},{r:5,t:'M',o:0},{r:7,t:'M',o:0},{r:4,t:'m',o:0}];
+
+// --- il Suono: Effetto + manopole decise in "Suono del vocoder" (#13), con i nomi proposti per Keopees
+const EFF = {
+  coro: {name:'Coro', sub:'La tua voce copiata sulle note della perlina, come un coro.'},
+  vocoder: {name:'Vocoder', sub:'La tua voce fa cantare le parole a un synth.'},
+  spento: {name:'Spento', sub:'Voce pulita, e sopra gli accordi come una tastiera.'},
+};
+const EKEYS = Object.keys(EFF), ALL = EKEYS;
+const steps = (a, b, s) => Array.from({length: Math.round((b - a) / s) + 1}, (_, i) => +(a + i * s).toFixed(2));
+const it = v => v.toLocaleString('it-IT');
+const pct = v => v + '%';
+const KN = [
+  {k:'i1', name:'Intensità con 1 dito', cname:'Con 1 dito', vals:steps(0,100,5), def:60, fmt:pct, for:ALL,
+   help:'Quanto Effetto senti, rispetto alla tua voce pulita, quando alzi 1 dito della seconda mano. Con Spento è quanto forte suonano gli accordi.'},
+  {k:'i5', name:'Intensità con 5 dita', cname:'Con 5 dita', vals:steps(0,100,5), def:90, fmt:pct, for:ALL,
+   help:'Come sopra, ma con 5 dita alzate. Tra 1 e 5 dita l\'Effetto cresce un po\' alla volta.'},
+  {k:'voci', name:'Note dell\'accordo', cname:'Note', vals:[3,4,5], def:4, chip:v => v + ' note', short:v => v,
+   fmt:v => ({3:'3', 4:'4, col basso', 5:'5, col basso e una in alto'})[v], for:ALL,
+   help:'Quante note suonano insieme. Con 4 si aggiunge il basso, con 5 anche una nota più alta.'},
+  {k:'timbro', name:'Timbro', vals:['sega','supersaw','quadra'], def:'supersaw',
+   fmt:v => ({sega:'Sega', supersaw:'Supersaw', quadra:'Quadra'})[v], for:['vocoder','spento'],
+   help:'Il colore del synth. Sega graffia, Supersaw è largo e pieno (il suono pop), Quadra è più vuoto, da videogioco.'},
+  {k:'bande', name:'Dettaglio', vals:[8,12,16,24,32], def:24, chip:v => v, short:v => v + ' fette',
+   fmt:v => `${v} fette, ${({8:'tanto robot', 12:'robot', 16:'a metà', 24:'parole chiare', 32:'chiarissime'})[v]}`, for:['vocoder'],
+   help:'In quante fette il Vocoder taglia la tua voce. Poche fette = più robot, tante = le parole si capiscono meglio.'},
+  {k:'cons', name:'Consonanti chiare', cname:'Consonanti', vals:steps(0,100,5), def:15, fmt:pct, for:['coro','vocoder'],
+   help:'Fa passare le S, le T e il fiato della tua voce vera, così le parole si capiscono anche con tanto Effetto.'},
+  {k:'morb', name:'Morbidezza', vals:steps(0,100,5), def:0, fmt:pct, for:['vocoder','spento'],
+   help:'Rende il synth più scuro e più dolce, e un po\' più lento a seguire la voce.'},
+  {k:'scivola', name:'Scivolata', vals:steps(0,400,20), def:0, fmt:v => v ? it(v / 1000) + ' s' : 'niente', for:ALL,
+   help:'Quando cambi perlina le note scivolano verso il nuovo accordo invece di saltare. Niente = salto netto.'},
+  {k:'gate', name:'Anti-fruscio', vals:steps(-75,-30,5), def:-75, short:v => v <= -75 ? 'spento' : it(v) + ' dB',
+   fmt:v => v <= -75 ? 'spento' : `${v <= -60 ? 'leggero' : v <= -45 ? 'medio' : 'forte'} (${it(v)} dB)`, for:ALL,
+   help:'Chiude il microfono quando non canti, così non si sentono fruscii e rumori di casa. Più forte taglia di più, ma può mangiare i finali delle frasi.'},
+  {k:'vol', name:'Volume in cuffia', cname:'Volume', vals:steps(.25,6,.25), def:2, fmt:v => '×' + it(v), for:ALL,
+   help:'Quanto forte ti senti in cuffia mentre canti. Non cambia il volume della Registrazione.'},
+];
+const KM = Object.fromEntries(KN.map(K => [K.k, K]));
+
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const pad = n => String(Math.floor(n)).padStart(2, '0');
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const st = {mode:'accordi', format:'verticale', i:1, edit:-1, lv:3, eff:'coro',
+            titolo:true, filtro:true, specchio:true, conto:true, title:'Ma Lei', mano:'sinistra',
+            snd:Object.fromEntries(KN.map(K => [K.k, K.def])),
+            ui:{panel:null, tab:'suono', more:false, tip:null, desk:true}};
+
+const idx = k => KM[k].vals.indexOf(st.snd[k]);
+const setIdx = (k, i) => { const v = KM[k].vals; st.snd[k] = v[Math.max(0, Math.min(v.length - 1, i))]; };
+const isDef = () => KN.every(K => st.snd[K.k] === K.def);
+const applies = K => K.for.includes(st.eff);
+const onlyLabel = K => 'solo ' + K.for.map(e => EFF[e].name).join(' e ');
+const lvPct = n => Math.round(st.snd.i1 + (st.snd.i5 - st.snd.i1) * (n - 1) / 4);
+
+// --- pezzi condivisi tra le varianti (solo controlli, non il layout)
+const lvRow = () => `<div class="lvrow" aria-label="Intensità per dita alzate">${[1,2,3,4,5].map(n => `<span data-lv="${n}">${n} ${n > 1 ? 'dita' : 'dito'}<b></b></span>`).join('')}</div>`;
+const rangeCtl = (K, cls = '') => `<input type="range" class="${cls}" id="r-${K.k}" data-knob="${K.k}" min="0" max="${K.vals.length - 1}" step="1" aria-label="${K.name}">`;
+const chipsCtl = K => `<div class="chips" role="group" aria-label="${K.name}">${K.vals.map((v, i) => `<button data-act="set" data-k="${K.k}" data-i="${i}">${(K.chip || K.fmt)(v)}</button>`).join('')}</div>`;
+const control = (K, cls) => K.vals.length <= 5 ? chipsCtl(K) : rangeCtl(K, cls);
+const effSeg = () => `<div class="seg" role="group" aria-label="Effetto">${EKEYS.map(v => `<button data-act="eff" data-val="${v}">${EFF[v].name}</button>`).join('')}</div>`;
+const resetBtn = (label = 'Rimetti il Suono di partenza') => `<button class="reset" data-act="reset" title="Effetto escluso: resta quello scelto">${label}</button>`;
+const sw = (k, label) => `<button class="switch" role="switch" data-act="sw" data-val="${k}"><span class="track"></span>${label}</button>`;
+const videoSet = () => `<div class="vset">
+  <div class="vrow">${sw('titolo', 'Titolo nel video')}<input id="titolo" type="text" value="${st.title}" maxlength="40" aria-label="Titolo accanto all'accordo"></div>
+  ${sw('filtro', 'Filtro rosa')}${sw('specchio', 'Specchio')}${sw('conto', 'Conto alla rovescia 3 s')}
+  <div class="vrow">Accordi con la mano <span class="seg" role="group" aria-label="Mano degli accordi"><button data-act="mano" data-val="sinistra">Sinistra</button><button data-act="mano" data-val="destra">Destra</button></span></div>
+  <div class="vrow">Camera <b>iPhone di Keopees</b></div>
+  <div class="vrow">Cartella delle Registrazioni <b>Filmati/Live Vocoder</b></div>
+</div>`;
+const guideSheet = () => `<h2>Guida</h2><p class="lbl">IL SUONO</p>
+  <p class="ctx">L'Effetto è cosa succede alla tua voce. Le manopole lo regolano e si salvano nella Canzone.</p>
+  <dl class="gl">${EKEYS.map(e => `<dt>${EFF[e].name}</dt><dd>${EFF[e].sub}</dd>`).join('')}
+  ${KN.map(K => `<dt>${K.name}</dt><dd>${K.help}${K.for.length < 3 ? ` <span class="only">${onlyLabel(K)}</span>` : ''}</dd>`).join('')}</dl>`;
+
+// --- le tre varianti: ognuna decide dove vanno Effetto e manopole
+const V = {
+  A: {
+    label: 'Cassetto: tutto in Impostazioni',
+    left: () => `<div class="row"><span class="lbl">Effetto</span>${effSeg()}<p class="ctx" data-sub></p></div>
+      <div class="tools"><button class="pill main" data-act="panel" data-val="imp">Impostazioni</button><span class="tiny">Suono, video e cartella</span></div>`,
+    sheet: () => {
+      const hid = KN.filter(K => !applies(K)).map(K => K.name);
+      const tabs = `<div class="seg" role="group" aria-label="Sezione"><button data-act="tab" data-val="suono">Suono</button><button data-act="tab" data-val="video">Video e cartella</button></div>`;
+      if (st.ui.tab === 'video') return `<h2>Impostazioni</h2>${tabs}${videoSet()}`;
+      return `<h2>Impostazioni</h2>${tabs}
+        <p class="ctx">Effetto: <b>${EFF[st.eff].name}</b>. Lo cambi sotto la ruota.</p>
+        <div class="list">${KN.filter(applies).map(K => `<div class="item">
+          <div class="top"><span>${K.name}</span><output data-show="${K.k}"></output></div>
+          ${control(K)}<p>${K.help}</p>${K.k === 'i5' ? lvRow() : ''}</div>`).join('')}</div>
+        ${hid.length ? `<p class="note">Con gli altri Effetti compaiono anche: ${hid.join(', ')}.</p>` : ''}
+        ${resetBtn()}`;
+    },
+  },
+  B: {
+    label: 'Sul poster: Suono sempre in vista',
+    left: () => {
+      const prim = ['i1','i5','voci','vol'], rest = KN.filter(K => !prim.includes(K.k));
+      const kn = K => `<div class="kn${applies(K) ? '' : ' off'}">
+        <div class="top"><span>${K.name}</span><button class="q" data-act="tip" data-val="${K.k}" aria-label="Cosa fa ${K.name}?">?</button>${applies(K) ? '' : `<span class="only">${onlyLabel(K)}</span>`}<output data-show="${K.k}"></output></div>
+        ${control(K, 'bracelet')}${st.ui.tip === K.k ? `<p class="tip">${K.help}</p>` : ''}${K.k === 'i5' ? lvRow() : ''}</div>`;
+      return `<div class="tools"><button class="pill" data-act="panel" data-val="imp">Impostazioni</button><span class="tiny">video e cartella</span></div>
+        <section class="snd" aria-label="Suono">
+          <div class="snd-head"><h3>Suono</h3>${resetBtn('♡ Di partenza')}</div>
+          <div class="effs" role="group" aria-label="Effetto">${EKEYS.map(e => `<button class="eff" data-act="eff" data-val="${e}"><i></i><b>${EFF[e].name}</b><small>${EFF[e].sub}</small></button>`).join('')}</div>
+          ${KN.filter(K => prim.includes(K.k)).map(kn).join('')}
+          <button class="more" data-act="more">${st.ui.more ? 'Meno manopole' : `Altre ${rest.length} manopole`}</button>
+          ${st.ui.more ? rest.map(kn).join('') : ''}
+        </section>`;
+    },
+    sheet: () => `<h2>Impostazioni</h2>${videoSet()}`,
+  },
+  C: {
+    label: 'Banco: manopole in fondo',
+    left: () => `<div class="row"><span class="lbl">Effetto</span><p class="ctx"><b data-effname></b>, si cambia dal banco del Suono qui sotto.</p></div>
+      <div class="tools"><button class="pill" data-act="panel" data-val="imp">Impostazioni</button><span class="tiny">video e cartella</span></div>`,
+    bottom: () => {
+      const GROUPS = [['Mano', ['i1','i5']], ['Accordo', ['voci','scivola']], ['Synth', ['timbro','bande','morb']], ['Voce', ['cons','gate']], ['Cuffia', ['vol']]];
+      const knob = K => `<div class="knob${applies(K) ? '' : ' off'}" data-knob="${K.k}" data-help="${K.k}" role="slider" tabindex="0" aria-label="${K.name}" aria-valuemin="0" aria-valuemax="${K.vals.length - 1}">
+        <div class="dial"></div><b>${K.cname || K.name}</b><output data-show-short="${K.k}"></output>${applies(K) ? '' : `<span class="only">${onlyLabel(K)}</span>`}</div>`;
+      return `<section class="desk" aria-label="Suono">
+        <div class="desk-head"><h3>Suono</h3><p class="lcd" data-lcd></p>${resetBtn('Di partenza').replace('class="reset"', 'class="pill dark"')}<button class="pill dark" data-act="desk">${st.ui.desk ? 'Nascondi' : 'Mostra'}</button></div>
+        ${st.ui.desk ? `<div class="desk-body">
+          <div class="grp"><span>Effetto</span><div class="effknob"><button class="dial" data-act="effcycle" aria-label="Cambia Effetto"></button>
+            <div class="effnames">${EKEYS.map(e => `<button data-act="eff" data-val="${e}">${EFF[e].name}</button>`).join('')}</div></div></div>
+          ${GROUPS.map(([g, ks]) => `<div class="grp"><span>${g}</span><div>${ks.map(k => knob(KM[k])).join('')}</div>${g === 'Mano' ? lvRow() : ''}</div>`).join('')}
+        </div>` : ''}
+      </section>`;
+    },
+    sheet: () => `<h2>Impostazioni</h2>${videoSet()}`,
+  },
+};
+const VK = Object.keys(V);
+let cur = VK.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'A';
+const LCD = 'Passa sopra una manopola per sapere cosa fa. Trascina in su o in giù per girarla, doppio clic per il valore di partenza.';
+
+$('#wheel').insertAdjacentHTML('beforeend', beads.map((_, i) =>
+  `<button data-act="bead" data-val="${i}" style="--a:${i * 72}deg"><b></b><small></small></button>`).join(''));
+$('#chips-root').innerHTML = NOTE.map((n, r) => `<button data-act="root" data-val="${r}">${n}</button>`).join('');
+$('#chips-type').innerHTML = Object.entries(TYPES).map(([k, t]) => `<button data-act="type" data-val="${k}">${t.label}</button>`).join('');
+$('#chips-oct').innerHTML = OCT.map(([o, l]) => `<button data-act="oct" data-val="${o}">${l}</button>`).join('');
+
+const name = b => NOTE[b.r] + (st.mode === 'accordi' ? TYPES[b.t].suf : '');
+const freqs = b => (st.mode === 'accordi' ? TYPES[b.t].iv : [0]).map(iv => 261.63 * 2 ** ((b.r + iv) / 12 + b.o));
+const dita = i => `${i + 1} ${i ? 'dita' : 'dito'}`;
+const octMark = o => o < 0 ? ' ↓' : o > 0 ? ' ↑' : '';
+
+// Ricostruisce i posti che cambiano per variante, poi aggiorna i valori (sync).
+function build() {
+  const v = V[cur], u = st.ui;
+  $('#slot-left').innerHTML = v.left();
+  $('#slot-bottom').innerHTML = v.bottom ? v.bottom() : '';
+  $('#slot-sheet').innerHTML = u.panel ? `<div class="scrim" data-act="close"></div><aside class="sheet" role="dialog" aria-label="${u.panel === 'guida' ? 'Guida' : 'Impostazioni'}">
+    <button class="x" data-act="close" aria-label="Chiudi">×</button>${u.panel === 'guida' ? guideSheet() : v.sheet()}</aside>` : '';
+  paint();
+}
+
+// Ruota, editor della perlina e interruttori: cambiano anche da soli (perline simulate), senza ricostruire i pannelli.
+function paint() {
+  const v = V[cur];
+  document.documentElement.dataset.format = st.format;
+  const cur_ = beads[st.i], ed = beads[st.edit];
+  const bind = {chord: name(cur_), edDita: ed ? dita(st.edit) : '', edName: ed ? NOTE[ed.r] + TYPES[ed.t].suf + octMark(ed.o) : '',
+                vlabel: `${cur} · ${v.label}`};
+  for (const [k, val] of Object.entries(bind)) $$(`[data-bind="${k}"]`).forEach(el => el.textContent = val);
+  $$('[data-act="bead"]').forEach((b, i) => {
+    b.querySelector('b').textContent = name(beads[i]);
+    b.querySelector('small').textContent = dita(i) + octMark(beads[i].o);
+    b.classList.toggle('on', i === st.i);
+    b.classList.toggle('editing', i === st.edit);
+  });
+  $('#editor').hidden = !ed;
+  const pressed = (act, val) => $$(`[data-act="${act}"]`).forEach(b => b.setAttribute('aria-pressed', b.dataset.val === String(val)));
+  pressed('mode', st.mode); pressed('format', st.format); pressed('mano', st.mano); pressed('tab', st.ui.tab);
+  if (ed) { pressed('root', ed.r); pressed('type', ed.t); pressed('oct', ed.o); }
+  $$('[data-act="sw"]').forEach(b => b.setAttribute('aria-checked', st[b.dataset.val]));
+  const t = $('#titolo'); if (t) t.hidden = !st.titolo;
+  setLcd();
+  sync();
+}
+
+// Aggiorna valori e stato senza ricostruire (così uno slider trascinato non perde la presa).
+function sync() {
+  $$('input[data-knob]').forEach(r => r.value = idx(r.dataset.knob));
+  $$('[data-show]').forEach(o => o.textContent = KM[o.dataset.show].fmt(st.snd[o.dataset.show]));
+  $$('[data-show-short]').forEach(o => { const K = KM[o.dataset.showShort]; o.textContent = (K.short || K.fmt)(st.snd[K.k]); });
+  $$('.knob[data-knob]').forEach(kn => {
+    const K = KM[kn.dataset.knob], i = idx(K.k);
+    kn.querySelector('.dial').style.setProperty('--p', i / (K.vals.length - 1));
+    kn.setAttribute('aria-valuenow', i); kn.setAttribute('aria-valuetext', K.fmt(st.snd[K.k]));
+  });
+  $$('[data-act="set"]').forEach(b => b.setAttribute('aria-pressed', +b.dataset.i === idx(b.dataset.k)));
+  $$('[data-act="eff"]').forEach(b => b.setAttribute('aria-pressed', b.dataset.val === st.eff));
+  $$('[data-sub]').forEach(p => p.textContent = EFF[st.eff].sub);
+  $$('[data-effname]').forEach(p => p.textContent = EFF[st.eff].name);
+  const ek = $('.effknob .dial'); if (ek) ek.style.setProperty('--p', [.278, .5, .722][EKEYS.indexOf(st.eff)]);
+  $$('[data-act="reset"]').forEach(b => b.disabled = isDef());
+  syncLv();
+  $('[data-state]').textContent = `Salvato nella Canzone «Ma Lei»: Effetto ${EFF[st.eff].name} · ` + KN.map(K => `${K.cname || K.name} ${K.fmt(st.snd[K.k])}`).join(' · ');
+}
+function syncLv() {
+  $$('[data-lv]').forEach(s => { const n = +s.dataset.lv; s.querySelector('b').textContent = lvPct(n) + '%'; s.classList.toggle('on', n === st.lv); });
+}
+function setLcd(k) { const el = $('[data-lcd]'); if (el) el.textContent = k ? `${KM[k].name}: ${KM[k].help}` : LCD; }
+function go(v) { cur = v; st.ui.panel = null; try { history.replaceState(null, '', '#' + v); } catch {} build(); }
+const step = d => VK[(VK.indexOf(cur) + d + VK.length) % VK.length];
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]');
+  if (!b) return;
+  const a = b.dataset.act, v = b.dataset.val, ed = beads[st.edit], u = st.ui;
+  if (a === 'prev' || a === 'next') return go(step(a === 'next' ? 1 : -1));
+  if (a === 'mode') st.mode = v;
+  if (a === 'format') st.format = v;
+  if (a === 'mano') st.mano = v;
+  if (a === 'sw') st[v] = !st[v];
+  if (a === 'bead') { st.edit = st.edit === +v ? -1 : +v; if (st.edit >= 0) st.i = st.edit; }
+  if (a === 'done') st.edit = -1;
+  if (ed && a === 'root') ed.r = +v;
+  if (ed && a === 'type') ed.t = v;
+  if (ed && a === 'oct') ed.o = +v;
+  if (a === 'eff') st.eff = v;
+  if (a === 'effcycle') st.eff = EKEYS[(EKEYS.indexOf(st.eff) + 1) % EKEYS.length];
+  if (a === 'set') setIdx(b.dataset.k, +b.dataset.i);
+  if (a === 'reset') KN.forEach(K => st.snd[K.k] = K.def);
+  if (a === 'panel') u.panel = v;
+  if (a === 'close') u.panel = null;
+  if (a === 'tab') u.tab = v;
+  if (a === 'more') u.more = !u.more;
+  if (a === 'tip') u.tip = u.tip === v ? null : v;
+  if (a === 'desk') u.desk = !u.desk;
+  lastCycle = performance.now();
+  build();
+});
+document.addEventListener('input', e => {
+  if (e.target.id === 'titolo') st.title = e.target.value;
+  const k = e.target.dataset.knob;
+  if (k) { setIdx(k, +e.target.value); sync(); }
+});
+
+// Manopole rotonde (variante C): trascina su/giù, rotellina, frecce, doppio clic = valore di partenza.
+let drag = null, wheelAcc = 0;
+document.addEventListener('pointerdown', e => {
+  const kn = e.target.closest('.knob[data-knob]');
+  if (!kn) return;
+  drag = {k: kn.dataset.knob, y: e.clientY, i: idx(kn.dataset.knob)};
+  kn.setPointerCapture(e.pointerId); kn.focus();
+});
+document.addEventListener('pointermove', e => {
+  if (!drag) return;
+  const n = KM[drag.k].vals.length;
+  setIdx(drag.k, drag.i + Math.round((drag.y - e.clientY) / 160 * (n - 1))); sync();
+});
+document.addEventListener('pointerup', () => drag = null);
+document.addEventListener('dblclick', e => {
+  const kn = e.target.closest('.knob[data-knob]');
+  if (kn) { const K = KM[kn.dataset.knob]; st.snd[K.k] = K.def; sync(); }
+});
+document.addEventListener('wheel', e => {
+  const kn = e.target.closest('.knob[data-knob]');
+  if (!kn) return;
+  e.preventDefault(); wheelAcc += e.deltaY;
+  if (Math.abs(wheelAcc) < 30) return;
+  setIdx(kn.dataset.knob, idx(kn.dataset.knob) + (wheelAcc < 0 ? 1 : -1)); wheelAcc = 0; sync();
+}, {passive: false});
+const showHelp = e => { const h = e.target.closest?.('[data-help]'); if (h) setLcd(h.dataset.help); };
+document.addEventListener('mouseover', showHelp);
+document.addEventListener('focusin', showHelp);
+
+document.addEventListener('keydown', e => {
+  const kn = e.target.closest?.('.knob[data-knob]');
+  const KEYS = {ArrowUp: 1, ArrowRight: 1, ArrowDown: -1, ArrowLeft: -1, Home: -99, End: 99};
+  if (kn && e.key in KEYS) { e.preventDefault(); setIdx(kn.dataset.knob, idx(kn.dataset.knob) + KEYS[e.key]); sync(); return; }
+  if (e.key === 'Escape' && st.ui.panel) { st.ui.panel = null; build(); return; }
+  if (!['ArrowLeft', 'ArrowRight'].includes(e.key) || e.target.closest?.('input,textarea,[contenteditable],[role=slider]')) return;
+  go(step(e.key === 'ArrowRight' ? 1 : -1));
+});
+addEventListener('hashchange', () => { const h = location.hash.slice(1); if (VK.includes(h) && h !== cur) go(h); });
+
+// --- video simulato (dal prototipo Stile grafico): l'onda segue Effetto e Intensità
+const HAND = [[.50,.95],[.38,.86],[.29,.75],[.23,.65],[.18,.56],[.40,.58],[.37,.42],[.35,.31],[.34,.21],[.50,.56],[.50,.38],[.50,.26],[.50,.15],[.59,.58],[.61,.42],[.62,.31],[.63,.22],[.67,.63],[.71,.51],[.73,.43],[.75,.35]];
+const BONES = [[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[0,17],[17,18],[18,19],[19,20]];
+const FINGERS = [[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16],[17,18,19,20]];
+const OPEN_ORDER = [1,2,3,4,0];
+const css = getComputedStyle(document.documentElement);
+const C = Object.fromEntries(['rosa','rosa-chiaro','viola','viola-luce','prugna','prugna-2','crema','lilla'].map(k => [k, css.getPropertyValue('--' + k).trim()]));
+const rgba = (hex, a) => `rgba(${[1,3,5].map(i => parseInt(hex.slice(i, i + 2), 16)).join(',')},${a})`;
+const rnd = i => { const v = Math.sin(i * 127.1) * 43758.5453; return v - Math.floor(v); };
+const GLITTER = Array.from({length: 36}, (_, i) => ({x: rnd(i), y: rnd(i + 99) * .8, s: .4 + rnd(i + 7) * .8, p: rnd(i + 3) * 6.28, v: 1 + rnd(i + 11) * 2}));
+const fold = [0,0,0,0,0], fold2 = [0,0,0,0,0];
+let lastCycle = performance.now(), lastLv = performance.now();
+
+function handPoints(fd) {
+  return HAND.map((p, j) => {
+    const f = FINGERS.findIndex(fg => fg.includes(j));
+    if (f < 0) return p;
+    const k = fd[f], order = FINGERS[f].indexOf(j);
+    if (f === 0) return [p[0] + (.46 - p[0]) * k * .7 * (order / 3), p[1] + (.72 - p[1]) * k * .7 * (order / 3)];
+    if (order === 0) return p;
+    const m = HAND[FINGERS[f][0]];
+    const q = [m[0] + (p[0] - m[0]) * .25, m[1] + .05 * order];
+    return [p[0] + (q[0] - p[0]) * k, p[1] + (q[1] - p[1]) * k];
+  });
+}
+function star(x, cx, cy, r) {
+  x.beginPath(); x.moveTo(cx, cy - r);
+  x.quadraticCurveTo(cx, cy, cx + r, cy); x.quadraticCurveTo(cx, cy, cx, cy + r);
+  x.quadraticCurveTo(cx, cy, cx - r, cy); x.quadraticCurveTo(cx, cy, cx, cy - r); x.fill();
+}
+function heart(x, cx, cy, r) {
+  x.beginPath(); x.moveTo(cx, cy + r * .9);
+  x.bezierCurveTo(cx - r * 1.6, cy - r * .2, cx - r * .6, cy - r * 1.3, cx, cy - r * .45);
+  x.bezierCurveTo(cx + r * .6, cy - r * 1.3, cx + r * 1.6, cy - r * .2, cx, cy + r * .9);
+  x.fill(); x.stroke();
+}
+function drawHand(x, P, m, t, glow, raised) {
+  x.lineCap = 'round'; x.strokeStyle = C.crema; x.lineWidth = m * .011;
+  x.shadowColor = glow; x.shadowBlur = m * .035;
+  x.beginPath(); BONES.forEach(([a, b]) => { x.moveTo(...P[a]); x.lineTo(...P[b]); }); x.stroke();
+  x.shadowBlur = 0; x.lineWidth = m * .004;
+  const BEAD = [C.rosa, C.lilla, C.crema, C['viola-luce']];
+  P.forEach((p, j) => {
+    const f = [4, 8, 12, 16, 20].indexOf(j);
+    if (f >= 0 && raised(f)) {
+      x.strokeStyle = C.crema; x.fillStyle = glow; heart(x, p[0], p[1], m * .028);
+      x.fillStyle = C.crema;
+      for (const k of [0, 2.1, 4.2]) star(x, p[0] + Math.cos(t * 2 + k) * m * .05, p[1] + Math.sin(t * 2 + k) * m * .05, m * .011);
+      return;
+    }
+    x.strokeStyle = C.prugna; x.fillStyle = BEAD[j % 4];
+    x.beginPath(); x.arc(p[0], p[1], m * .016, 0, 7); x.fill(); x.stroke();
+  });
+}
+function draw(cv, t) {
+  const r = cv.getBoundingClientRect();
+  if (!r.width) return;
+  const dpr = Math.min(2, devicePixelRatio || 1);
+  const W = Math.round(r.width * dpr), H = Math.round(r.height * dpr);
+  if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
+  const x = cv.getContext('2d'), m = Math.min(W, H);
+  const lvl = lvPct(st.lv) / 100;
+  x.save();
+  if (st.specchio) { x.translate(W, 0); x.scale(-1, 1); }
+  let g = x.createLinearGradient(0, 0, 0, H);
+  if (st.filtro) {
+    g.addColorStop(0, C['prugna-2']); g.addColorStop(1, C.prugna);
+    x.fillStyle = g; x.fillRect(0, 0, W, H);
+    g = x.createRadialGradient(W * .4, H * .42, 0, W * .4, H * .42, m * .9);
+    g.addColorStop(0, rgba(C.rosa, .38)); g.addColorStop(1, rgba(C.rosa, 0));
+    x.fillStyle = g; x.fillRect(0, 0, W, H);
+    x.fillStyle = rgba(C.prugna, .75);
+  } else {
+    g.addColorStop(0, '#9A8F86'); g.addColorStop(1, '#5B524C');
+    x.fillStyle = g; x.fillRect(0, 0, W, H);
+    x.fillStyle = 'rgba(40,32,30,.7)';
+  }
+  x.beginPath(); x.ellipse(W * .36, H * .4, m * .13, m * .16, 0, 0, 7); x.fill();
+  x.beginPath(); x.ellipse(W * .36, H * .95, m * .38, m * .26, 0, 0, 7); x.fill();
+  if (st.filtro) GLITTER.forEach(s => { x.fillStyle = rgba(C.crema, .2 + .8 * Math.max(0, Math.sin(t * s.v + s.p))); star(x, s.x * W, s.y * H, m * .014 * s.s); });
+  const hs = m * .6;
+  const L = st.mano === 'sinistra', flip = (pts, f) => f ? pts.map(([px, py]) => [1 - px, py]) : pts;
+  const ox = W * (L ? .68 : .32) - hs / 2 + Math.sin(t * .8) * m * .02, oy = H * .42 - hs / 2 + Math.sin(t * 1.1) * m * .015;
+  drawHand(x, flip(handPoints(fold), !L).map(([px, py]) => [ox + px * hs, oy + py * hs]), m, t, C.rosa, f => fold[f] < .5);
+  const hs2 = m * .38, ox2 = W * (L ? .16 : .84) - hs2 / 2 + Math.sin(t * .9 + 2) * m * .015, oy2 = H * .45 - hs2 / 2;
+  drawHand(x, flip(handPoints(fold2), L).map(([px, py]) => [ox2 + px * hs2, oy2 + py * hs2]), m, t, C['viola-luce'], f => fold2[f] < .5);
+  const bx = W * (L ? .05 : .95), r5 = m * .02;
+  x.lineWidth = m * .004; x.strokeStyle = C.crema;
+  for (let k = 0; k < 5; k++) {
+    x.beginPath(); x.arc(bx, H * .62 - k * r5 * 2.6, r5, 0, 7);
+    x.fillStyle = k >= st.lv ? rgba(C.crema, .2) : k === st.lv - 1 ? C.rosa : C['viola-luce'];
+    x.fill(); if (k < st.lv) x.stroke();
+  }
+  x.restore();
+  x.fillStyle = rgba(C.crema, .55); x.textAlign = 'right';
+  x.font = `${Math.round(m * .032)}px Nunito, sans-serif`;
+  x.fillText(`camera simulata · ${EFF[st.eff].name} ${lvPct(st.lv)}%`, W - m * .05, m * .07);
+  x.textAlign = 'left';
+  const fs = freqs(beads[st.i]), y0 = H * .86, amp = Math.min(H * .06, m * .09) * (.25 + .75 * lvl);
+  // Coro e Vocoder: l'onda segue la voce (respira); Spento: accordi fissi come una tastiera
+  const env = st.eff !== 'spento' ? .55 + .45 * Math.abs(Math.sin(t * 1.9) * Math.sin(t * .6 + 1)) : .85;
+  const wave = (scale, alpha) => {
+    x.beginPath();
+    for (let i = 0; i <= 220; i++) {
+      const u = i / 220;
+      const y = fs.reduce((s, f) => s + Math.sin(2 * Math.PI * u * f / 55 - t * f / 60), 0) / fs.length;
+      x[i ? 'lineTo' : 'moveTo'](u * W, y0 + y * amp * env * scale);
+    }
+    const lg = x.createLinearGradient(0, 0, W, 0);
+    lg.addColorStop(0, rgba(C.rosa, alpha)); lg.addColorStop(1, rgba(C['viola-luce'], alpha));
+    x.strokeStyle = lg; x.stroke();
+  };
+  x.shadowColor = C.rosa; x.shadowBlur = m * .03;
+  x.lineWidth = m * .004; wave(-.6, .35);
+  x.lineWidth = m * .008; wave(1, 1);
+  x.shadowBlur = 0;
+  const chord = name(beads[st.i]), s = m * .11, tx = m * .06, ty = m * .05 + s * 1.05, d = Math.max(2, Math.round(s * .07));
+  x.font = `${s}px Pacifico, cursive`;
+  x.fillStyle = rgba(C.prugna, .55); x.fillText(chord, tx + d * 1.8, ty + d * 1.8);
+  x.fillStyle = C.crema; for (let i = d; i > 0; i--) x.fillText(chord, tx + i, ty + i);
+  x.fillStyle = C.rosa; x.fillText(chord, tx, ty);
+  const title = st.title.trim();
+  if (st.titolo && title) {
+    const sx = tx + x.measureText(chord).width + s * .2, text = '– ' + title;
+    let ts = s * .5;
+    x.font = `${ts}px Pacifico, cursive`;
+    const room = W - m * .05 - sx, w = x.measureText(text).width;
+    if (w > room) { ts *= room / w; x.font = `${ts}px Pacifico, cursive`; }
+    x.fillStyle = rgba(C.prugna, .6); x.fillText(text, sx + 2, ty + 2);
+    x.fillStyle = C.crema; x.fillText(text, sx, ty);
+  }
+}
+
+function frame(now) {
+  if (st.edit < 0 && now - lastCycle > 2600) { st.i = (st.i + 1) % beads.length; lastCycle = now; paint(); }
+  if (now - lastLv > 3700) { st.lv = st.lv % 5 + 1; lastLv = now; syncLv(); } // seconda mano simulata
+  const ease = (fd, n) => {
+    const open = new Set(OPEN_ORDER.slice(0, n));
+    fd.forEach((v, f) => { const target = open.has(f) ? 0 : 1; fd[f] = reduce ? target : v + (target - v) * .15; });
+  };
+  ease(fold, st.i + 1); ease(fold2, st.lv);
+  draw($('canvas'), reduce ? 1.3 : now / 1000);
+  requestAnimationFrame(frame);
+}
+
+build();
+requestAnimationFrame(frame);
+</script>
