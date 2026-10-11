@@ -8,6 +8,7 @@ import { avviso, stato } from './avvisi.js';
 import { parametriRust, scegli } from './manopole.js';
 import { apriCamera } from './camera.js';
 import { avviaMani } from './mani.js';
+import { avviaRegistrazione } from './registra.js';
 const invoke = (...a) => window.__TAURI__.core.invoke(...a);
 
 let dati = datiIniziali(), songs = dati.canzoni;
@@ -36,7 +37,7 @@ const videoSet = () => `<div class="vset">
   <div class="vrow">${sw('titolo', 'Titolo nel video')}<b>il nome della Canzone</b></div>
   ${sw('filtro', 'Filtro rosa')}${sw('specchio', 'Specchio')}${sw('conto', 'Conto alla rovescia 3 s')}
   <div class="vrow">Accordi con la mano <span class="seg" role="group" aria-label="Mano degli accordi"><button data-act="mano" data-val="sinistra">Sinistra</button><button data-act="mano" data-val="destra">Destra</button></span></div>
-  <div class="vrow">Cartella delle Registrazioni <b>Filmati/Live Vocoder</b></div>
+  <div class="vrow">Cartella delle Registrazioni <button class="pill small" data-act="cartella">${esc(nomeCartella())}</button></div>
 </div>`;
 const guideSheet = () => `<h2>Guida</h2><p class="lbl">IL SUONO</p>
   <p class="ctx">L'Effetto è cosa succede alla tua voce. Le manopole lo regolano e si salvano nella Canzone.</p>
@@ -119,6 +120,8 @@ function paint() {
   pressed('mode', st.mode); pressed('format', st.format); pressed('mano', st.mano); pressed('from', st.ui.form?.from);
   if (ed) { pressed('root', ed.r); pressed('type', ed.t); pressed('oct', ed.o); }
   $$('[data-act="sw"]').forEach(b => b.setAttribute('aria-checked', st[b.dataset.val]));
+  $('.app').classList.toggle('registrando', !!st.ui.rec);
+  $('.rec').textContent = !st.ui.rec ? 'Registra 00:00' : st.ui.conto ? `Stop · ${st.ui.conto}` : `Stop ${mmss(performance.now() - inizio)}`;
   sync();
 }
 
@@ -153,6 +156,9 @@ document.addEventListener('click', e => {
   if (outside) { u.menu = false; u.form = null; }
   if (!b) { if (outside) build(); return; }
   const a = b.dataset.act, v = b.dataset.val, ed = st.beads[st.edit];
+  if (a === 'rec') return void (st.ui.rec ? fermaRegistrazione() : registra());
+  if (st.ui.rec) return; // durante la Registrazione è tutto bloccato tranne Stop
+  if (a === 'cartella') return void scegliCartella();
   if (a === 'songmenu') { u.menu = !u.menu; u.form = null; u.err = ''; }
   if (a === 'song') { if (+v !== st.song) openSong(+v); u.menu = false; }
   if (a === 'new') { u.form = {kind:'new', from:'copia'}; u.draft = ''; u.err = ''; }
@@ -185,13 +191,13 @@ document.addEventListener('click', e => {
   build();
 });
 document.addEventListener('input', e => { if (e.target.id === 'song-name') st.ui.draft = e.target.value; });
-document.addEventListener('change', e => { const k = e.target.dataset?.dev; if (k) { st.dev[k] = e.target.value; setLcd('dev:' + k); controllaDispositivi(); } });
+document.addEventListener('change', e => { const k = e.target.dataset?.dev; if (k && !st.ui.rec) { st.dev[k] = e.target.value; setLcd('dev:' + k); controllaDispositivi(); } });
 
 // Manopole: trascina su/giù, rotellina, frecce, doppio clic = valore di partenza.
 let drag = null, wheelAcc = 0;
 document.addEventListener('pointerdown', e => {
   const kn = e.target.closest('.knob[data-knob]');
-  if (!kn) return;
+  if (!kn || st.ui.rec) return;
   drag = {k: kn.dataset.knob, y: e.clientY, i: idx(kn.dataset.knob)};
   kn.setPointerCapture(e.pointerId); kn.focus();
 });
@@ -203,11 +209,11 @@ document.addEventListener('pointermove', e => {
 document.addEventListener('pointerup', () => drag = null);
 document.addEventListener('dblclick', e => {
   const kn = e.target.closest('.knob[data-knob]');
-  if (kn) { const K = KM[kn.dataset.knob]; st.snd[K.k] = K.def; sync(); }
+  if (kn && !st.ui.rec) { const K = KM[kn.dataset.knob]; st.snd[K.k] = K.def; sync(); }
 });
 document.addEventListener('wheel', e => {
   const kn = e.target.closest('.knob[data-knob]');
-  if (!kn) return;
+  if (!kn || st.ui.rec) return;
   e.preventDefault(); wheelAcc += e.deltaY;
   if (Math.abs(wheelAcc) < 30) return;
   setIdx(kn.dataset.knob, idx(kn.dataset.knob) + (wheelAcc < 0 ? 1 : -1)); wheelAcc = 0; sync();
@@ -218,7 +224,7 @@ document.addEventListener('focusin', showHelp);
 document.addEventListener('keydown', e => {
   const kn = e.target.closest?.('.knob[data-knob]');
   const KEYS = {ArrowUp: 1, ArrowRight: 1, ArrowDown: -1, ArrowLeft: -1, Home: -99, End: 99};
-  if (kn && e.key in KEYS) { e.preventDefault(); setIdx(kn.dataset.knob, idx(kn.dataset.knob) + KEYS[e.key]); sync(); return; }
+  if (kn && e.key in KEYS && !st.ui.rec) { e.preventDefault(); setIdx(kn.dataset.knob, idx(kn.dataset.knob) + KEYS[e.key]); sync(); return; }
   if (e.key === 'Enter' && e.target.id === 'song-name') $('[data-act="create"],[data-act="dorename"]')?.click();
   if (e.key === 'Escape' && (st.ui.panel || st.ui.menu)) { st.ui.panel = null; st.ui.menu = false; st.ui.form = null; build(); }
 });
@@ -269,6 +275,7 @@ function controllaDispositivi() {
     const cam = scegli(st.liste.cam, st.dev.cam, camere.find(c => c.iphone)?.nome);
     const tipo = outs.find(d => d.nome === out)?.tipo;
     st.muto = tipo === 'altoparlanti';
+    if (reg && inn !== st.att.in) fermaRegistrazione("Il microfono si è staccato: ho fermato la Registrazione e l'ho salvata.");
     if (inn !== st.att.in || out !== st.att.out) {
       st.att.in = inn; st.att.out = out;
       await motore.avvia(inn, out).catch(e => avviso('audio', `Non riesco ad accendere l'audio: ${e}`));
@@ -294,9 +301,70 @@ function suMani({ mani, nota, dita2 }) {
   if (cambia) paint();
 }
 
+// --- Registrazione (spec §6)
+let reg = null, inizio = 0, orologi = [], predefinita = '';
+const pausa = ms => new Promise(r => setTimeout(r, ms));
+const mmss = ms => { const s = Math.floor(ms / 1000); return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; };
+const nomeCartella = () => dati.cartella === predefinita ? 'Filmati/Live Vocoder' : dati.cartella.replace(/^\/Users\/[^/]+/, '~');
+
+async function scegliCartella() {
+  const c = await invoke('scegli_cartella');
+  if (c) { dati.cartella = c; salva(dati); build(); }
+}
+
+async function registra() {
+  const actx = new AudioContext({ sampleRate: 48000 }); // subito, dentro il clic
+  const cartella = dati.cartella;
+  st.ui.rec = true; st.ui.conto = st.conto ? 3 : 0; inizio = performance.now(); build();
+  if (await invoke('spazio_libero', { cartella }) < 2e9) avviso('disco', 'Restano meno di 2 GB sul disco: circa 20 minuti di video.');
+  for (let n = st.conto ? 3 : 0; n > 0; n--) {
+    st.ui.conto = n; paint();
+    await pausa(1000);
+    if (!st.ui.rec) { actx.close(); return; } // Stop durante il conto: nessun file
+  }
+  st.ui.conto = 0;
+  try {
+    reg = await avviaRegistrazione({ actx, canvas: cv, cartella, canzone: songs[st.song].name,
+      onErrore: e => fermaRegistrazione(`La Registrazione si è fermata: ${e}`) });
+  } catch (e) {
+    st.ui.rec = false; build();
+    return avviso('rec', `Non riesco a registrare: ${e}`);
+  }
+  inizio = performance.now();
+  orologi = [
+    setInterval(paint, 500),
+    setInterval(async () => {
+      if (await invoke('spazio_libero', { cartella }) < 5e8) fermaRegistrazione("Disco quasi pieno: ho fermato la Registrazione e l'ho salvata.");
+    }, 5000),
+  ];
+  if (!st.ui.rec) { // Stop premuto mentre partiva: il file appena aperto va nel Cestino, niente "Salvato"
+    const r = reg; reg = null; orologi.forEach(clearInterval);
+    invoke('butta', { path: await r.ferma() }).catch(() => {});
+    return build();
+  }
+  paint();
+}
+
+async function fermaRegistrazione(motivo) {
+  if (!reg) { st.ui.rec = false; st.ui.conto = 0; return build(); } // durante il conto alla rovescia
+  const r = reg; reg = null;
+  orologi.forEach(clearInterval);
+  const path = await r.ferma();
+  st.ui.rec = false; build();
+  if (motivo) avviso('rec', motivo);
+  const nome = path.split('/').pop().replace(/\.mp4$/, '');
+  avviso('salvato', `Salvato: ${nome}`, [
+    ['Guarda', () => invoke('guarda', { path })],
+    ['Mostra nel Finder', () => invoke('mostra', { path })],
+    ['Butta', () => invoke('butta', { path }).catch(e => avviso('rec', String(e)))],
+  ]);
+}
+
 async function avvio() {
   const c = await carica();
   dati = c.dati; songs = dati.canzoni; st.dev = dati.dispositivi;
+  predefinita = await invoke('cartella_predefinita');
+  dati.cartella ??= predefinita;
   openSong(Math.max(0, songs.findIndex(s => s.name === dati.aperta)), false);
   if (c.rotto) avviso('canzoni', 'Non riuscivo a leggere le Canzoni salvate: le ho messe da parte e si riparte da «Ma Lei».');
   build();
