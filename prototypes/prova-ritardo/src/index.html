@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Prova Ritardo (PROTOTIPO)</title>
+<style>
+  body { font: 15px -apple-system, sans-serif; margin: 16px; background: #1d0b29; color: #f6e8ff; display: grid; grid-template-columns: 420px 1fr; gap: 16px; }
+  fieldset { border: 1px solid #7a3d9e; border-radius: 8px; margin: 0 0 12px; }
+  select, button, input { font: inherit; margin: 3px 0; }
+  button { background: #ff6ad5; border: 0; border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+  pre { white-space: pre-wrap; background: #000; padding: 8px; height: 300px; overflow: auto; font-size: 12px; }
+  canvas { max-height: 85vh; max-width: 100%; background: #000; }
+  video { display: none; }
+</style>
+</head>
+<body>
+<div>
+  <b>PROTOTIPO usa e getta.</b> Solo con le cuffie a filo: senza, fischia.
+  <fieldset><legend>1. Ritardo</legend>
+    Microfono <select id="in"></select><br>
+    Cuffie <select id="outdev"></select><br>
+    Buffer <select id="buf"><option>32</option><option selected>64</option><option>128</option><option>256</option></select>
+    <button id="start">Avvia audio</button> <button id="stop">Ferma</button><br>
+    <label><input type="checkbox" id="voc"> Vocoder (accordo di Do fisso)</label><br>
+    <button id="measure">Misura Ritardo</button> (cuffia appoggiata sul microfono)
+  </fieldset>
+  <fieldset><legend>2. Camera</legend>
+    <button id="cams">Cerca camere</button> <select id="cam"></select><br>
+    Formato <select id="fmt"><option value="v">Verticale 1080×1920</option><option value="h">Orizzontale 1920×1080</option></select>
+    <button id="camstart">Avvia camera</button>
+  </fieldset>
+  <fieldset><legend>3. Registrazione MP4</legend>
+    Secondi <input id="sec" type="number" value="60" style="width:60px">
+    <button id="rec">Registra</button> <span id="count"></span>
+  </fieldset>
+  <pre id="out"></pre>
+</div>
+<div><canvas id="cv" width="1080" height="1920"></canvas></div>
+<video id="video" playsinline muted></video>
+<script src="main.js"></script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "productName": "Prova Ritardo",
+  "version": "0.0.1",
+  "identifier": "com.mestakes.prova-ritardo",
+  "build": { "frontendDist": "../src" },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [{ "title": "Prova Ritardo (PROTOTIPO usa e getta)", "width": 1200, "height": 950 }],
+    "security": { "csp": null }
+  },
+  "bundle": { "active": true, "targets": ["app"], "icon": ["icons/icon.icns", "icons/icon.png"] }
+}
