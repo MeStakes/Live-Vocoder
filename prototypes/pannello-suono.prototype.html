@@ -78,7 +78,7 @@ button:disabled{opacity:.45;cursor:default}
 .core.long{font-size:6.5cqw}
 .hint{margin:0;font-size:.8rem;font-weight:700}
 
-/* editor della perlina: galleggia accanto alla ruota, così non spinge giù niente */
+/* editor della Nota: galleggia accanto alla ruota, così non spinge giù niente */
 .editor{position:absolute;z-index:4;top:0;left:calc(min(100cqw,100cqh,300px) + 16px);width:min(340px,calc(100cqw - min(100cqw,100cqh,300px)));min-width:260px;max-height:100cqh;overflow-y:auto;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;padding:14px 16px;border-radius:24px;background:var(--crema);box-shadow:0 0 0 2px var(--rosa-chiaro),0 18px 36px -18px var(--viola)}
 .editor h2{margin:0;font-size:1rem;font-weight:800}
 .editor h2 b{font:400 1.3rem/1 var(--f-titolo);color:var(--rosa)}
@@ -170,14 +170,14 @@ button:disabled{opacity:.45;cursor:default}
       <div class="wheel-box">
         <div class="wheel" id="wheel"><div class="core" data-bind="chord">Lam</div></div>
         <div class="editor" id="editor" hidden>
-          <h2>Perlina da <span data-bind="edDita"></span>: <b data-bind="edName"></b></h2>
-          <div class="row"><span>Nota</span><div class="chips" id="chips-root"></div></div>
+          <h2>Nota da <span data-bind="edDita"></span>: <b data-bind="edName"></b></h2>
+          <div class="row"><span>Base</span><div class="chips" id="chips-root"></div></div>
           <div class="row"><span>Tipo</span><div class="chips" id="chips-type"></div></div>
           <div class="row"><span>Ottava</span><div class="chips" id="chips-oct"></div></div>
           <button class="done" data-act="done">Fatto</button>
         </div>
       </div>
-      <p class="hint">Tocca una perlina per cambiare accordo e ottava.</p>
+      <p class="hint">Tocca una Nota per cambiarla.</p>
     </div>
 
     <div class="right">
@@ -201,7 +201,7 @@ const OCT = [[-1,'Bassa'],[0,'Media'],[1,'Alta']];
 
 // --- il Suono: Effetto + manopole decise in "Suono del vocoder" (#13), con i nomi proposti per Keopees
 const EFF = {
-  coro: {name:'Coro', sub:'La tua voce copiata sulle note della perlina, come un coro.'},
+  coro: {name:'Coro', sub:'La tua voce copiata sull\'accordo della Nota, come un coro.'},
   vocoder: {name:'Vocoder', sub:'La tua voce fa cantare le parole a un synth.'},
   spento: {name:'Spento', sub:'Voce pulita, e sopra gli accordi come una tastiera.'},
 };
@@ -214,11 +214,11 @@ const KN = [
    help:'Quanto Effetto senti, rispetto alla tua voce pulita, quando alzi 1 dito della seconda mano. Con Spento è quanto forte suonano gli accordi.'},
   {k:'i5', name:'Intensità con 5 dita', cname:'Con 5 dita', vals:steps(0,100,5), def:90, fmt:pct, for:ALL,
    help:'Come sopra, ma con 5 dita alzate. Tra 1 e 5 dita l\'Effetto cresce un po\' alla volta.'},
-  {k:'voci', name:'Note dell\'accordo', cname:'Note', vals:[3,4,5], def:4, short:v => v,
-   fmt:v => ({3:'3', 4:'4, col basso', 5:'5, col basso e una in alto'})[v], for:ALL,
-   help:'Quante note suonano insieme. Con 4 si aggiunge il basso, con 5 anche una nota più alta.'},
+  {k:'voci', name:'Pienezza', vals:[3,4,5], def:4,
+   fmt:v => ({3:'3 · leggero', 4:'4 · col basso', 5:'5 · pieno'})[v], for:ALL,
+   help:'Quante note suonano insieme in ogni accordo. 3 = leggero, 4 aggiunge il basso, 5 aggiunge anche una nota in alto.'},
   {k:'scivola', name:'Scivolata', vals:steps(0,400,20), def:0, fmt:v => v ? it(v / 1000) + ' s' : 'niente', for:ALL,
-   help:'Quando cambi perlina le note scivolano verso il nuovo accordo invece di saltare. Niente = salto netto.'},
+   help:'Quando cambi Nota le note scivolano verso il nuovo accordo invece di saltare. Niente = salto netto.'},
   {k:'timbro', name:'Timbro', vals:['sega','supersaw','quadra'], def:'supersaw',
    fmt:v => ({sega:'Sega', supersaw:'Supersaw', quadra:'Quadra'})[v], for:['vocoder','spento'],
    help:'Il colore del synth. Sega graffia, Supersaw è largo e pieno (il suono pop), Quadra è più vuoto, da videogioco.'},
@@ -238,7 +238,7 @@ const KN = [
 const KM = Object.fromEntries(KN.map(K => [K.k, K]));
 const GROUPS = [['Mano', ['i1','i5']], ['Accordo', ['voci','scivola']], ['Synth', ['timbro','bande','morb']], ['Voce', ['cons','gate']], ['Cuffia', ['vol']]];
 
-// --- Canzoni: ognuna salva Perline, Modalità, Formato, Effetto, tutte le manopole e le Impostazioni. Canzoni di prova.
+// --- Canzoni: ognuna salva le 5 Note, Modalità, Formato, Effetto, tutte le manopole e le Impostazioni. Canzoni di prova.
 const DEF_SND = Object.fromEntries(KN.map(K => [K.k, K.def]));
 const B = (r, t, o = 0) => ({r, t, o});
 const DEF_SONG = {beads:[B(0,'M'), B(7,'M'), B(9,'m'), B(5,'M'), B(4,'m')], mode:'accordi', format:'verticale', eff:'coro', snd:DEF_SND,
@@ -313,9 +313,9 @@ const songMenu = () => {
     <div class="sbtns"><button class="pill danger" data-act="${ok}">${okLabel}</button><button class="pill" data-act="cancel">Annulla</button></div></div>`;
   const foot =
     f?.kind === 'new' ? nameForm('Nome della nuova Canzone', 'create', 'Crea',
-      `<span class="lbl">Parti da</span><div class="chips"><button data-act="from" data-val="vuota">Perline e Suono di partenza</button><button data-act="from" data-val="copia">Copia di «${cur}»</button></div>`)
+      `<span class="lbl">Parti da</span><div class="chips"><button data-act="from" data-val="vuota">Note e Suono di partenza</button><button data-act="from" data-val="copia">Copia di «${cur}»</button></div>`)
     : f?.kind === 'rename' ? nameForm(`Nuovo nome per «${cur}»`, 'dorename', 'Salva')
-    : f?.kind === 'del' ? `<div class="sform"><p class="ctx">Eliminare «${cur}»? Perline e Suono si perdono. Le Registrazioni restano nella cartella.</p>
+    : f?.kind === 'del' ? `<div class="sform"><p class="ctx">Eliminare «${cur}»? Note e Suono si perdono. Le Registrazioni restano nella cartella.</p>
         <div class="sbtns"><button class="pill danger" data-act="dodel">Elimina</button><button class="pill" data-act="cancel">Annulla</button></div></div>`
     : `<button class="newsong" data-act="new">+ Nuova Canzone</button>
        <div class="sbtns"><button class="pill small" data-act="rename">Rinomina «${cur}»</button>
@@ -347,7 +347,7 @@ function build() {
   paint();
 }
 
-// Ruota, editor della perlina e interruttori: cambiano anche da soli (perline simulate), senza ricostruire il banco.
+// Ruota, editor della Nota e interruttori: cambiano anche da soli (Note simulate), senza ricostruire il banco.
 function paint() {
   document.documentElement.dataset.format = st.format;
   const ed = st.beads[st.edit], chord = name(st.beads[st.i]);
@@ -400,7 +400,7 @@ document.addEventListener('click', e => {
   const a = b.dataset.act, v = b.dataset.val, ed = st.beads[st.edit];
   if (a === 'songmenu') { u.menu = !u.menu; u.form = null; u.err = ''; }
   if (a === 'song') { if (+v !== st.song) openSong(+v); u.menu = false; }
-  if (a === 'new') { u.form = {kind:'new', from:'vuota'}; u.draft = ''; u.err = ''; }
+  if (a === 'new') { u.form = {kind:'new', from:'copia'}; u.draft = ''; u.err = ''; }
   if (a === 'from') u.form.from = v;
   if (a === 'rename') { u.form = {kind:'rename'}; u.draft = songs[st.song].name; u.err = ''; }
   if (a === 'del') u.form = {kind:'del'};
