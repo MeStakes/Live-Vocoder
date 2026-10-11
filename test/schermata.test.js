@@ -8,7 +8,7 @@ test("niente font da internet: l'app funziona offline", () => {
 });
 import { execFileSync } from 'node:child_process';
 
-for (const f of ['ui.js', 'video.js', 'motore.js', 'avvisi.js'])
+for (const f of ['ui.js', 'video.js', 'motore.js', 'avvisi.js', 'camera.js'])
   test(`${f} si legge (sintassi)`, () => execFileSync(process.execPath, ['--check', `src/${f}`]));
 
 test('lo script della schermata sta in ui.js', () => {

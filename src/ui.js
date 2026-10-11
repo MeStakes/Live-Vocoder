@@ -6,6 +6,7 @@ import { disegna, misura } from './video.js';
 import * as motore from './motore.js';
 import { avviso, stato } from './avvisi.js';
 import { parametriRust, scegli } from './manopole.js';
+import { apriCamera } from './camera.js';
 const invoke = (...a) => window.__TAURI__.core.invoke(...a);
 
 let dati = datiIniziali(), songs = dati.canzoni;
@@ -166,7 +167,7 @@ document.addEventListener('click', e => {
   if (a === 'dorename' && !(u.err = controllaNome(u.draft, songs, st.song))) { songs[st.song].name = u.draft.trim(); u.form = null; }
   if (a === 'dodel') { songs.splice(st.song, 1); st.song = 0; openSong(0, false); u.form = null; }
   if (a === 'mode') st.mode = v;
-  if (a === 'format') st.format = v;
+  if (a === 'format') { st.format = v; controllaDispositivi(); }
   if (a === 'mano') st.mano = v;
   if (a === 'sw') st[v] = !st[v];
   if (a === 'bead') { st.edit = st.edit === +v ? -1 : +v; if (st.edit >= 0) st.i = st.edit; }
@@ -261,17 +262,22 @@ function invia() {
 let giroDisp = null;
 function controllaDispositivi() {
   return (giroDisp ??= (async () => {
-    const audio = await invoke('dispositivi');
+    const [audio, camere] = await Promise.all([invoke('dispositivi'), invoke('camere')]);
     const ins = audio.filter(d => d.ingresso), outs = audio.filter(d => d.uscita);
     const prima = JSON.stringify(st.liste);
-    st.liste = { ...st.liste, in: ins.map(d => d.nome), out: outs.map(d => d.nome) };
+    st.liste = { in: ins.map(d => d.nome), out: outs.map(d => d.nome), cam: camere.map(c => c.nome) };
     const inn = scegli(st.liste.in, st.dev.in, ins.find(d => d.predefinito_ingresso)?.nome);
     const out = scegli(st.liste.out, st.dev.out, outs.find(d => d.predefinito_uscita)?.nome);
+    const cam = scegli(st.liste.cam, st.dev.cam, camere.find(c => c.iphone)?.nome);
     const tipo = outs.find(d => d.nome === out)?.tipo;
     st.muto = tipo === 'altoparlanti';
     if (inn !== st.att.in || out !== st.att.out) {
       st.att.in = inn; st.att.out = out;
       await motore.avvia(inn, out).catch(e => avviso('audio', `Non riesco ad accendere l'audio: ${e}`));
+    }
+    if (cam !== st.att.cam || st.format !== st.camFormato) {
+      st.att.cam = cam; st.camFormato = st.format;
+      await apriCamera(camVideo, cam, misura(st.format)).catch(e => avviso('camera', `Non riesco ad aprire la camera: ${e}`));
     }
     stato('cuffie', st.muto, "Servono le cuffie a filo: con gli altoparlanti l'Ascolto resta spento, perché fischierebbe.");
     stato('bluetooth', tipo === 'bluetooth', "Con le cuffie Bluetooth l'Ascolto arriva in ritardo: meglio quelle a filo.");
