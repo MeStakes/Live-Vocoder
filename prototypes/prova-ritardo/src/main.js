@@ -14,8 +14,8 @@ const guard = (fn) => async () => { try { await fn(); } catch (e) { say('ERRORE 
 
 // --- Audio: Rust manda il mix d'uscita come PCM float32 grezzo
 let wave = new Float32Array(2048), recNode = null, typeLogged = false;
-const pcm = new Channel();
-pcm.onmessage = (buf) => {
+// Un Channel nuovo a ogni avvio: Rust riparte a contare i messaggi da 0, un Channel riusato li scarta.
+const onPcm = (buf) => {
   if (!typeLogged) { typeLogged = true; say('Channel PCM riceve: ' + Object.prototype.toString.call(buf)); }
   const f = new Float32Array(buf);
   if (f.length >= wave.length) wave = f.slice(-wave.length);
@@ -34,7 +34,7 @@ pcm.onmessage = (buf) => {
   say('VideoEncoder H.264 1080x1920: ' + (window.VideoEncoder ? (await VideoEncoder.isConfigSupported({ codec: 'avc1.640028', width: 1080, height: 1920, bitrate: 8e6, framerate: 30 })).supported : 'assente'));
 })().catch((e) => say('ERRORE ' + e));
 
-$('start').onclick = guard(async () => say(await invoke('start', { input: $('in').value, output: $('outdev').value, buffer: +$('buf').value, pcm })));
+$('start').onclick = guard(async () => say(await invoke('start', { input: $('in').value, output: $('outdev').value, buffer: +$('buf').value, pcm: Object.assign(new Channel(), { onmessage: onPcm }) })));
 $('stop').onclick = guard(() => invoke('stop'));
 $('voc').onchange = guard(() => invoke('set_vocoder', { on: $('voc').checked }));
 $('measure').onclick = guard(async () => { say('misuro (5 impulsi)...'); say(await invoke('measure')); $('voc').checked = false; invoke('set_vocoder', { on: false }); });
@@ -42,9 +42,10 @@ $('measure').onclick = guard(async () => { say('misuro (5 impulsi)...'); say(awa
 // --- Camera nel canvas 9:16 o 16:9, con forma d'onda e orologio sopra
 const video = $('video'), cv = $('cv'), ctx = cv.getContext('2d');
 $('cams').onclick = guard(async () => {
+  try { say(await invoke('prefer_iphone')); } catch (e) { say('iPhone: ' + e); }
   (await navigator.mediaDevices.getUserMedia({ video: true })).getTracks().forEach((t) => t.stop());
   const cams = (await navigator.mediaDevices.enumerateDevices()).filter((d) => d.kind === 'videoinput');
-  fill($('cam'), cams.map((c) => ({ label: c.label, value: c.deviceId })), /iPhone/);
+  fill($('cam'), cams.map((c) => ({ label: c.label, value: c.deviceId })), /^(?!.*(Panoramica|Desk View)).*iPhone/);
   say('camere: ' + cams.map((c) => c.label).join(' | '));
 });
 $('camstart').onclick = guard(async () => {
@@ -62,7 +63,9 @@ video.onresize = () => {
   const s = Math.max(cv.width / video.videoWidth, cv.height / video.videoHeight);
   say(`frame camera ${video.videoWidth}x${video.videoHeight}; il canvas ${cv.width}x${cv.height} usa ${Math.round(cv.width / s)}x${Math.round(cv.height / s)} pixel veri (scala ${s.toFixed(2)})`);
 };
+let draws = 0;
 (function draw() {
+  draws++;
   const W = cv.width, H = cv.height;
   ctx.fillStyle = '#2a0f3a';
   ctx.fillRect(0, 0, W, H);
@@ -83,6 +86,10 @@ video.onresize = () => {
 
 // --- Registrazione: canvas + PCM di Rust (AudioWorklet -> MediaStreamDestination) in un solo MediaRecorder
 $('rec').onclick = guard(async () => {
+  $('rec').disabled = true;
+  try { await record(); } finally { $('rec').disabled = false; }
+});
+async function record() {
   const sec = +$('sec').value;
   const actx = new AudioContext({ sampleRate: 48000 });
   await actx.audioWorklet.addModule('worklet.js');
@@ -98,8 +105,24 @@ $('rec').onclick = guard(async () => {
   const chunks = [];
   rec.ondataavailable = (e) => chunks.push(e.data);
   const done = new Promise((r) => (rec.onstop = r));
-  rec.start();
+  // Senza timeslice WebKit smette di scrivere il video dopo ~20 MB (12 s): consegna ogni secondo.
+  rec.start(1000);
   say(`registro ${sec} s, ${rec.mimeType}, AudioContext ${actx.state} ${actx.sampleRate} Hz`);
+  // Diagnostica: fotogrammi del canvas catturato e della camera, contati con requestVideoFrameCallback
+  const mon = document.createElement('video');
+  mon.muted = true;
+  mon.srcObject = new MediaStream([tracks[0]]);
+  mon.play();
+  let capFrames = 0, camFrames = 0;
+  const countCap = () => { capFrames++; mon.requestVideoFrameCallback(countCap); };
+  const countCam = () => { camFrames++; video.requestVideoFrameCallback(countCam); };
+  mon.requestVideoFrameCallback(countCap);
+  video.requestVideoFrameCallback(countCam);
+  const diag = setInterval(() => {
+    say(`diag: ridisegni ${draws}, canvas catturato ${capFrames}, camera ${camFrames}, traccia ${tracks[0].readyState}${tracks[0].muted ? ' muta' : ''}, rec ${rec.state}, nascosta ${document.hidden}`);
+    draws = capFrames = camFrames = 0;
+  }, 2000);
+  done.then(() => clearInterval(diag));
   for (let t = sec; t > 0; t--) { $('count').textContent = t + ' s'; await new Promise((r) => setTimeout(r, 1000)); }
   $('count').textContent = '';
   rec.stop();
@@ -110,4 +133,4 @@ $('rec').onclick = guard(async () => {
   const name = `prova-${cv.width}x${cv.height}-${Date.now()}.${rec.mimeType.includes('mp4') ? 'mp4' : 'webm'}`;
   const path = await invoke('save', new Uint8Array(await blob.arrayBuffer()), { headers: { 'x-name': name } });
   say(`salvato ${path} (${(blob.size / 1e6).toFixed(1)} MB); coda worklet min ${qmin} max ${qmax} campioni, vuoti ${under}`);
-});
+}

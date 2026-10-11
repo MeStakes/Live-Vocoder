@@ -2529,6 +2529,8 @@ version = "0.0.1"
 dependencies = [
  "cpal",
  "hound",
+ "objc2",
+ "objc2-foundation",
  "ringbuf",
  "tauri",
  "tauri-build",

@@ -94,6 +94,36 @@ fn log(line: String) {
     let _ = writeln!(f, "{line}");
 }
 
+// Continuity Camera: WebKit nasconde la camera dell'iPhone se non è la camera preferita di sistema
+// (AVCaptureDeviceManager.mm, setIsEphemeral). Con l'iPhone in verticale macOS non la sceglie da solo.
+#[tauri::command]
+fn prefer_iphone() -> Result<String, String> {
+    use objc2::{class, msg_send, rc::Retained, runtime::{AnyObject, Bool}};
+    use objc2_foundation::{NSArray, NSString};
+    #[link(name = "AVFoundation", kind = "framework")]
+    unsafe extern "C" {}
+    unsafe {
+        let n = |o: &AnyObject| -> String {
+            let s: Retained<NSString> = msg_send![o, localizedName];
+            s.to_string()
+        };
+        let types = NSArray::from_retained_slice(&[NSString::from_str("AVCaptureDeviceTypeExternal")]);
+        let session: Retained<AnyObject> = msg_send![class!(AVCaptureDeviceDiscoverySession), discoverySessionWithDeviceTypes: &*types, mediaType: &*NSString::from_str("vide"), position: 0isize];
+        let devices: Retained<NSArray<AnyObject>> = msg_send![&*session, devices];
+        let mut seen = vec![];
+        for d in devices.iter() {
+            let cont: Bool = msg_send![&*d, isContinuityCamera];
+            seen.push(format!("{} (continuity {})", n(&d), cont.as_bool()));
+            if cont.as_bool() {
+                let _: () = msg_send![class!(AVCaptureDevice), setUserPreferredCamera: &*d];
+                let p: Option<Retained<AnyObject>> = msg_send![class!(AVCaptureDevice), systemPreferredCamera];
+                return Ok(format!("camera preferita impostata: {} (il sistema ora usa: {})", n(&d), p.map(|p| n(&p)).unwrap_or("nessuna".into())));
+            }
+        }
+        Err(format!("nessuna camera Continuity tra: {}", seen.join(", ")))
+    }
+}
+
 fn run(
     input: String,
     output: String,
@@ -288,7 +318,7 @@ impl Vocoder {
 fn main() {
     tauri::Builder::default()
         .manage(App::default())
-        .invoke_handler(tauri::generate_handler![devices, start, stop, set_vocoder, measure, save, log])
+        .invoke_handler(tauri::generate_handler![devices, start, stop, set_vocoder, measure, save, log, prefer_iphone])
         .run(tauri::generate_context!())
         .unwrap();
 }

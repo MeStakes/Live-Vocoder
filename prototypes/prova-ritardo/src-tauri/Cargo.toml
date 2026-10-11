@@ -11,3 +11,5 @@ tauri = { version = "2", features = [] }
 cpal = "0.18"
 ringbuf = "0.5"
 hound = "3"
+objc2 = "0.6"
+objc2-foundation = "0.3"
