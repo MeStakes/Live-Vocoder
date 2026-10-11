@@ -2,294 +2,240 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&family=Nunito:wght@400;700;800&family=Pacifico&display=swap">
 <style>
-/* PROTOTIPO usa-e-getta, ticket "Stile grafico".
-   Tre varianti della schermata principale (Studio, Palco, Poster), si cambiano con le frecce in basso,
-   con ← → oppure con #A #B #C. L'app non esiste ancora, quindi è una pagina a sé. Camera simulata. */
+/* PROTOTIPO usa-e-getta, ticket "Stile grafico". Variante scelta: Poster (le altre sono sul branch prototype/stile-grafico).
+   Perline configurabili (accordo + ottava), titolo accanto all'accordo, filtro rosa disattivabile. Camera simulata. */
 :root{
-  /* Layout: una finestra Mac, il video al centro; le varianti cambiano dove stanno i comandi */
+  /* Layout: finestra Mac; a sinistra titolo, ruota di perline e impostazioni; a destra il video-polaroid e i comandi */
   --rosa:#FF4F9A; --rosa-chiaro:#FF8FC4; --confetto:#FFD3E7;
   --viola:#6B2BD9; --viola-luce:#A27BFF;
   --prugna:#2B1145; --prugna-2:#43205F; --notte:#1A0A2B;
-  --crema:#FFF0D9; --lilla:#DCC6FF; --cipria:#FFE6F2;
+  --crema:#FFF0D9; --lilla:#DCC6FF;
   --bordo:rgb(255 240 217 / .12); --ombra:rgb(10 2 20 / .65);
   --tl-r:#FF5F57; --tl-g:#FEBC2E; --tl-v:#28C840;
-  --sw-bg:#0E0E10; --sw-fg:#FFFFFF;
   --f-titolo:"Pacifico","Brush Script MT",cursive;
   --f-etichetta:"Amatic SC","Arial Narrow",sans-serif;
   --f-testo:"Nunito","Avenir Next",system-ui,sans-serif;
-  --retro:.025em .025em 0 var(--crema),.05em .05em 0 var(--crema),.075em .075em 0 var(--crema),.11em .11em .05em var(--ombra);
-  --retro-chiaro:.025em .025em 0 var(--rosa-chiaro),.05em .05em 0 var(--rosa-chiaro),.075em .075em 0 var(--rosa-chiaro),.11em .11em .05em rgb(43 17 69 / .25);
+  --retro:.025em .025em 0 var(--rosa-chiaro),.05em .05em 0 var(--rosa-chiaro),.075em .075em 0 var(--rosa-chiaro),.11em .11em .05em rgb(43 17 69 / .25);
+  --perla:radial-gradient(circle at 35% 30%,var(--viola-luce),var(--viola) 75%);
   --ar:9/16; --arn:.5625;
   color-scheme:dark;
 }
 :root[data-format="orizzontale"]{--ar:16/9;--arn:1.7778}
-body{background:var(--notte);color:var(--crema);font:16px/1.45 var(--f-testo);padding-inline:16px;padding-block:20px 100px}
+body{background:var(--notte);color:var(--crema);font:16px/1.45 var(--f-testo);padding-inline:16px;padding-block:20px 40px}
 .intro{max-width:1180px;margin:0 auto 16px;color:var(--confetto);font-size:.95rem}
 .intro b{color:var(--crema)}
+[hidden]{display:none!important}
 [data-act]{cursor:pointer}
-[data-act]:focus-visible,.sw button:focus-visible{outline:2px solid var(--rosa-chiaro);outline-offset:3px}
-.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+[data-act]:focus-visible,input:focus-visible{outline:2px solid var(--viola);outline-offset:3px}
 
-/* finestra Mac */
-.win{max-width:1180px;margin-inline:auto;background:var(--prugna);border-radius:14px;overflow:hidden;border:1px solid var(--bordo);box-shadow:0 30px 80px -30px var(--ombra)}
+.win{max-width:1180px;margin-inline:auto;border-radius:14px;overflow:hidden;border:1px solid var(--bordo);box-shadow:0 30px 80px -30px var(--ombra)}
 .titlebar{display:flex;gap:8px;padding:11px 14px;background:var(--notte)}
 .titlebar i{width:12px;height:12px;border-radius:50%;background:var(--tl-r)}
 .titlebar i:nth-child(2){background:var(--tl-g)} .titlebar i:nth-child(3){background:var(--tl-v)}
 
-/* icona dell'app, uguale a docs/brand/icon-1024.png */
-.app-icon{--s:44px;flex:none;width:var(--s);height:var(--s);border-radius:calc(var(--s)*.225);background:linear-gradient(var(--rosa-chiaro),var(--rosa));display:grid;place-items:center;font:400 calc(var(--s)*.52)/1 var(--f-titolo);color:var(--viola);text-shadow:var(--retro);padding-bottom:calc(var(--s)*.06);box-sizing:border-box}
-.brand{display:flex;align-items:center;gap:12px}
-.brand h1{margin:0;font:400 1.55rem/1.3 var(--f-titolo);color:var(--rosa);text-shadow:var(--retro)}
-.by{font:700 1.2rem/1 var(--f-etichetta);letter-spacing:.14em;text-transform:uppercase;color:var(--confetto)}
-
-/* video (il riquadro tratteggiato è ciò che finisce nella Registrazione) */
-.frame{position:relative;aspect-ratio:var(--ar);width:min(100%,calc(68vh * var(--arn)));margin-inline:auto;border-radius:18px;overflow:hidden;outline:2px dashed var(--rosa-chiaro);outline-offset:6px}
-.frame canvas{display:block;width:100%;height:100%}
-.cap{margin:16px 0 0;text-align:center;font-size:.8rem;color:var(--confetto)}
-
-/* comandi condivisi */
-.eyebrow{margin:0 0 6px;font-weight:800;font-size:.85rem;color:var(--viola)}
-.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;padding:4px;border-radius:999px;background:var(--notte)}
-.seg button{all:unset;text-align:center;padding:10px 12px;border-radius:999px;font-weight:800;font-size:.9rem;color:var(--confetto)}
-.seg button[aria-pressed="true"]{background:var(--viola);color:var(--crema);box-shadow:inset 0 0 0 1px var(--viola-luce)}
-.rec{all:unset;display:flex;align-items:center;justify-content:center;gap:10px;padding:16px 22px;border-radius:999px;background:var(--rosa);color:var(--notte);font-weight:800;font-size:1.1rem;box-shadow:0 12px 30px -12px var(--rosa)}
-.rec::before{content:"";width:14px;height:14px;border-radius:50%;background:var(--crema)}
-.is-rec .rec{background:var(--crema);color:var(--rosa)}
-.is-rec .rec::before{border-radius:3px;background:var(--rosa)}
-.timer{font-variant-numeric:tabular-nums;font-weight:800}
-.file{margin:0;font-size:.8rem;color:var(--confetto)}
-
-/* A · Studio: video a sinistra, pannello comandi a destra */
-.a-body{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:28px;padding:24px;background:linear-gradient(160deg,var(--cipria),var(--lilla));color:var(--prugna)}
-.a-body .brand h1{color:var(--viola);text-shadow:var(--retro-chiaro)} .a-body .by,.a-body .cap,.a-body .file,.a-body .notes{color:var(--prugna)}
-.a-body .seg{background:var(--crema)} .a-body .seg button{color:var(--prugna)} .a-body .seg button[aria-pressed="true"]{color:var(--crema)}
-.a-left{display:flex;flex-direction:column;gap:20px;min-width:0}
-.panel{display:flex;flex-direction:column;gap:20px;padding:22px;border-radius:28px;background:rgb(255 240 217 / .7);box-shadow:0 0 0 2px var(--crema),0 20px 40px -24px var(--viola)}
-.chord-big{margin:0;font:400 4rem/1.25 var(--f-titolo);color:var(--rosa);text-shadow:var(--retro-chiaro)}
-.notes{margin:-12px 0 0;font-weight:700;color:var(--confetto)}
-.legend{display:grid;gap:4px;margin:0;padding:0;list-style:none}
-.legend button{all:unset;box-sizing:border-box;width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 10px;border-radius:999px;font-size:.8rem;font-weight:700;color:var(--prugna)}
-.legend button.on{background:var(--crema);box-shadow:0 0 0 2px var(--rosa),0 0 18px var(--rosa-chiaro)}
-.beads{display:flex;gap:3px;padding-inline:6px;background:linear-gradient(transparent calc(50% - 1px),var(--rosa-chiaro) 0 calc(50% + 1px),transparent 0)}
-.beads i{font-style:normal;display:grid;place-items:center;width:24px;height:24px;border-radius:50%;font-size:.72rem;font-weight:800;color:var(--prugna);background:radial-gradient(circle at 35% 30%,var(--crema),var(--lilla) 75%);box-shadow:inset -2px -2px 3px rgb(43 17 69 / .12)}
-.beads i:nth-child(3n+1){background:radial-gradient(circle at 35% 30%,var(--crema),var(--rosa-chiaro) 75%)}
-.beads i:nth-child(3n){background:radial-gradient(circle at 35% 30%,var(--crema),var(--crema) 75%)}
-.beads i.h{color:var(--rosa);font-size:.8rem}
-.rec-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
-@media (max-width:820px){.a-body{grid-template-columns:1fr;padding:16px}}
-
-/* B · Palco: video a tutto schermo, comandi in vetro sopra */
-.b-body{position:relative;display:grid;place-items:center;min-height:min(78vh,760px);padding:84px 18px 120px;background:radial-gradient(circle,rgb(255 240 217 / .22) 1px,transparent 1.6px) 0 0/22px 22px,radial-gradient(circle,rgb(255 143 196 / .25) 1px,transparent 1.6px) 11px 11px/22px 22px,radial-gradient(60% 70% at 50% 40%,var(--viola),var(--prugna) 60%,var(--notte))}
-.b-body .frame{width:min(100%,calc(52vh * var(--arn)));outline-offset:4px}
-.hud{position:absolute;left:18px;right:18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;z-index:2}
-.hud.top{top:18px} .hud.bottom{bottom:22px;justify-content:center}
-.glass{background:rgb(43 17 69 / .6);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--bordo);border-radius:999px}
-.b-body .seg{background:transparent}
-.pills{display:flex;gap:8px;flex-wrap:wrap}
-.ring{all:unset;width:76px;height:76px;box-sizing:border-box;border-radius:50%;border:4px solid var(--crema);display:grid;place-items:center}
-.ring::after{content:"";width:56px;height:56px;border-radius:50%;background:var(--rosa);transition:all .2s}
-.is-rec .ring::after{width:26px;height:26px;border-radius:7px}
-.b-body .timer{padding:10px 16px}
-.b-body .brand{padding:6px 16px 6px 6px}
-.b-body .brand h1{font-size:1.2rem}
-
-/* C · Poster: carta rosa, ruota degli accordi, video come polaroid */
-.c-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:36px;padding:32px;background:var(--confetto);color:var(--prugna)}
-.c-left{display:flex;flex-direction:column;gap:22px;min-width:0}
-.poster{margin:0;font:400 clamp(3.4rem,9vw,6.4rem)/1.05 var(--f-titolo);color:var(--viola);text-shadow:var(--retro-chiaro)}
-.c-left .by{color:var(--prugna);font-size:1.6rem}
-.c-left .app-icon{--s:88px}
+.body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:36px;padding:32px;background:var(--confetto);color:var(--prugna)}
+.left,.right{display:flex;flex-direction:column;gap:22px;min-width:0}
+.right{align-items:center}
+.poster{margin:0;font:400 clamp(3.4rem,9vw,6.4rem)/1.05 var(--f-titolo);color:var(--viola);text-shadow:var(--retro)}
 .sign{display:flex;align-items:center;gap:16px}
+.by{font:700 1.6rem/1 var(--f-etichetta);letter-spacing:.14em;text-transform:uppercase}
+.app-icon{--s:88px;flex:none;width:var(--s);height:var(--s);box-sizing:border-box;padding-bottom:calc(var(--s)*.06);border-radius:calc(var(--s)*.225);background:linear-gradient(var(--rosa-chiaro),var(--rosa));display:grid;place-items:center;font:400 calc(var(--s)*.52)/1 var(--f-titolo);color:var(--viola);text-shadow:.025em .025em 0 var(--crema),.05em .05em 0 var(--crema),.075em .075em 0 var(--crema),.11em .11em .05em var(--ombra)}
+
+/* ruota-braccialetto: perline viola, quella suonata rosa */
 .wheel{position:relative;width:min(100%,280px);aspect-ratio:1;container-type:size}
 .wheel::before{content:"";position:absolute;inset:15cqw;border-radius:50%;border:2px solid var(--rosa-chiaro)}
-.wheel button{all:unset;position:absolute;left:50%;top:50%;width:24cqw;height:24cqw;margin:-12cqw;border-radius:50%;display:grid;place-content:center;text-align:center;background:radial-gradient(circle at 35% 30%,var(--crema),var(--lilla) 75%);box-shadow:inset -3px -3px 6px rgb(43 17 69 / .15);color:var(--prugna);transform:rotate(var(--a)) translateY(-35cqw) rotate(calc(-1 * var(--a)))}
-.wheel button b{font:400 6.5cqw/1.2 var(--f-titolo)}
-.wheel button small{font-size:4cqw;font-weight:800}
-.wheel button.on{background:radial-gradient(circle at 35% 30%,var(--rosa-chiaro),var(--rosa) 75%);color:var(--crema);box-shadow:0 0 22px var(--rosa)}
-.core{position:absolute;inset:34%;display:grid;place-items:center;font:400 9cqw/1 var(--f-titolo);color:var(--rosa)}
-.c-right{display:flex;flex-direction:column;gap:22px;align-items:center;min-width:0}
-.polaroid{position:relative;width:100%;padding:16px 16px 0;background:var(--crema);border-radius:6px;transform:rotate(-1.6deg);box-shadow:0 24px 50px -24px var(--ombra)}
-.polaroid::before{content:"";position:absolute;top:-14px;left:50%;width:120px;height:30px;margin-left:-60px;background:var(--rosa-chiaro);opacity:.85;transform:rotate(3deg)}
-.polaroid .frame{width:min(100%,calc(52vh * var(--arn)));border-radius:4px;outline-color:var(--rosa)}
-.polaroid .cap{margin:0;padding:14px 0 12px;font:700 1.4rem/1.1 var(--f-etichetta);color:var(--prugna)}
-.dock{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;align-items:center}
-.c-body .seg{background:var(--crema);box-shadow:inset 0 0 0 2px var(--rosa-chiaro)}
-.c-body .seg button{color:var(--prugna)}
-.c-body .seg button[aria-pressed="true"]{color:var(--crema)}
-.c-body .file{color:var(--prugna)}
-@media (max-width:820px){.c-body{grid-template-columns:1fr;padding:20px}}
+.wheel button{all:unset;position:absolute;left:50%;top:50%;width:25cqw;height:25cqw;margin:-12.5cqw;border-radius:50%;display:grid;place-content:center;text-align:center;background:var(--perla);color:var(--crema);box-shadow:inset -3px -3px 6px rgb(43 17 69 / .3);transform:rotate(var(--a)) translateY(-35cqw) rotate(calc(-1 * var(--a)));transition:box-shadow .15s}
+.wheel button b{font:400 6cqw/1.25 var(--f-titolo);white-space:nowrap}
+.wheel button small{font-size:3.8cqw;font-weight:800}
+.wheel button.on{background:radial-gradient(circle at 35% 30%,var(--rosa-chiaro),var(--rosa) 75%);box-shadow:0 0 22px var(--rosa)}
+.wheel button.editing{box-shadow:0 0 0 4px var(--crema),0 0 0 7px var(--viola)}
+.core{position:absolute;inset:34%;display:grid;place-items:center;text-align:center;font:400 9cqw/1.1 var(--f-titolo);color:var(--rosa)}
+.hint{margin:-8px 0 0;font-size:.85rem;font-weight:700}
 
-/* barra per cambiare variante: NON fa parte del design */
-.sw{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:10;display:flex;align-items:center;gap:6px;padding:6px;border-radius:999px;background:var(--sw-bg);color:var(--sw-fg);font:600 13px/1 ui-monospace,Menlo,monospace;box-shadow:0 8px 24px var(--ombra)}
-.sw button{all:unset;cursor:pointer;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-size:16px}
-.sw button:hover{background:rgb(255 255 255 / .12)}
-.sw span{min-width:120px;text-align:center}
-@media (prefers-reduced-motion:reduce){.ring::after{transition:none}}
+/* editor della perlina */
+.editor{display:flex;flex-direction:column;gap:12px;padding:16px 18px;border-radius:24px;background:var(--crema);box-shadow:0 0 0 2px var(--rosa-chiaro),0 18px 36px -24px var(--viola)}
+.editor h2{margin:0;font-size:1rem;font-weight:800}
+.editor h2 b{font:400 1.3rem/1 var(--f-titolo);color:var(--rosa)}
+.row{display:flex;flex-direction:column;gap:6px}
+.row > span{font-size:.8rem;font-weight:800;color:var(--viola)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button,.done{all:unset;padding:6px 12px;border-radius:999px;font-size:.85rem;font-weight:800;background:var(--confetto);color:var(--prugna);box-shadow:inset 0 0 0 2px var(--lilla)}
+.chips button[aria-pressed="true"]{background:var(--viola);color:var(--crema);box-shadow:none}
+.done{align-self:flex-start;padding:8px 20px;background:var(--rosa);color:var(--crema);box-shadow:none}
+
+/* impostazioni, in riga sotto la ruota */
+.settings{display:flex;flex-wrap:wrap;align-items:center;gap:12px 22px}
+.switch{all:unset;display:inline-flex;align-items:center;gap:8px;font-size:.9rem;font-weight:800;color:var(--prugna)}
+.track{position:relative;flex:none;width:42px;height:24px;border-radius:999px;background:var(--crema);box-shadow:inset 0 0 0 2px var(--rosa-chiaro);transition:background .15s}
+.track::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--rosa-chiaro);transition:transform .15s}
+.switch[aria-checked="true"] .track{background:var(--viola);box-shadow:none}
+.switch[aria-checked="true"] .track::after{transform:translateX(18px);background:var(--crema)}
+.title-set{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap}
+#titolo{width:11rem;max-width:100%;padding:6px 12px;border:0;border-radius:999px;background:var(--crema);color:var(--prugna);font:400 1rem/1.3 var(--f-titolo);box-shadow:inset 0 0 0 2px var(--rosa-chiaro)}
+
+/* video */
+.polaroid{position:relative;width:100%;box-sizing:border-box;padding:16px 16px 0;background:var(--crema);border-radius:6px;box-shadow:0 24px 50px -24px var(--ombra)}
+.polaroid::before{content:"";position:absolute;top:-14px;left:50%;width:120px;height:30px;margin-left:-60px;background:var(--rosa-chiaro);opacity:.85;transform:rotate(3deg)}
+.frame{position:relative;aspect-ratio:var(--ar);width:min(100%,calc(52vh * var(--arn)));margin-inline:auto;border-radius:4px;overflow:hidden;outline:2px dashed var(--rosa);outline-offset:6px}
+.frame canvas{display:block;width:100%;height:100%}
+.count{position:absolute;inset:0;display:grid;place-items:center;background:rgb(43 17 69 / .35);font:400 7rem/1 var(--f-titolo);color:var(--rosa);text-shadow:var(--retro)}
+.cap{margin:0;padding:14px 0 12px;text-align:center;font:700 1.4rem/1.1 var(--f-etichetta)}
+.dock{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;align-items:center}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;padding:4px;border-radius:999px;background:var(--crema);box-shadow:inset 0 0 0 2px var(--rosa-chiaro)}
+.seg button{all:unset;text-align:center;padding:10px 12px;border-radius:999px;font-weight:800;font-size:.9rem;color:var(--prugna)}
+.seg button[aria-pressed="true"]{background:var(--viola);color:var(--crema)}
+.rec{all:unset;display:flex;align-items:center;gap:10px;padding:16px 22px;border-radius:999px;background:var(--rosa);color:var(--crema);font-weight:800;font-size:1.1rem;box-shadow:0 12px 30px -12px var(--rosa)}
+.rec::before{content:"";width:14px;height:14px;border-radius:50%;background:var(--crema)}
+.is-rec .rec{background:var(--viola)}
+.is-rec .rec::before{border-radius:3px}
+.timer{font-variant-numeric:tabular-nums}
+.file{margin:0;font-size:.8rem}
+@media (max-width:820px){.body{grid-template-columns:1fr;padding:20px}}
+@media (prefers-reduced-motion:reduce){.track,.track::after,.wheel button{transition:none}}
 </style>
 
-<p class="intro"><b>Tre idee per la schermata dell'app.</b> Cambia con le frecce in basso (o ← →). Il riquadro tratteggiato è il video che viene registrato: mani, onda e accordo finiscono nel file. I pulsanti funzionano, la camera è simulata.</p>
+<p class="intro"><b>Variante Poster.</b> Tocca una perlina per cambiarle accordo e ottava. Il riquadro tratteggiato è il video che viene registrato. La camera è simulata.</p>
 
-<!-- A · Studio -->
-<section class="win" data-v="A" data-name="Studio">
+<section class="win">
   <div class="titlebar"><i></i><i></i><i></i></div>
-  <div class="a-body">
-    <div class="a-left">
-      <div class="brand"><div class="app-icon">K</div><div><h1>Live Vocoder</h1><div class="by">by Keopees</div></div></div>
-      <div><div class="frame"><canvas data-label=".09"></canvas></div><p class="cap">Questo riquadro è il video registrato.</p></div>
-    </div>
-    <aside class="panel">
-      <div><p class="eyebrow">Accordo</p><p class="chord-big" data-bind="chord">Lam</p><p class="notes" data-bind="notes">La, Do, Mi</p></div>
-      <div class="seg" role="group" aria-label="Modalità"><button data-act="mode" data-val="accordi">Accordi</button><button data-act="mode" data-val="nota">Nota singola</button></div>
-      <div class="seg" role="group" aria-label="Formato"><button data-act="format" data-val="verticale">Verticale</button><button data-act="format" data-val="orizzontale">Orizzontale</button></div>
-      <div><p class="eyebrow">Dita alzate, accordo</p><ul class="legend" data-legend></ul></div>
-      <div class="rec-row"><button class="rec" data-act="rec" data-bind="recLabel">Registra</button><span class="timer" data-bind="timer">00:00</span></div>
-      <p class="file" data-bind="file"></p>
-    </aside>
-  </div>
-</section>
-
-<!-- B · Palco -->
-<section class="win" data-v="B" data-name="Palco" hidden>
-  <div class="titlebar"><i></i><i></i><i></i></div>
-  <div class="b-body">
-    <div class="hud top">
-      <div class="brand glass"><div class="app-icon" style="--s:34px">K</div><h1>Live Vocoder</h1></div>
-      <div class="pills">
-        <div class="seg glass" role="group" aria-label="Modalità"><button data-act="mode" data-val="accordi">Accordi</button><button data-act="mode" data-val="nota">Nota</button></div>
-        <div class="seg glass" role="group" aria-label="Formato"><button data-act="format" data-val="verticale">9:16</button><button data-act="format" data-val="orizzontale">16:9</button></div>
-      </div>
-    </div>
-    <div class="frame"><canvas data-label=".17"></canvas></div>
-    <div class="hud bottom">
-      <span class="timer glass" data-bind="timer">00:00</span>
-      <button class="ring" data-act="rec"><span class="sr" data-bind="recLabel">Registra</span></button>
-      <span class="file glass" style="padding:10px 16px" data-bind="file"></span>
-    </div>
-  </div>
-</section>
-
-<!-- C · Poster -->
-<section class="win" data-v="C" data-name="Poster" hidden>
-  <div class="titlebar"><i></i><i></i><i></i></div>
-  <div class="c-body">
-    <div class="c-left">
+  <div class="body">
+    <div class="left">
       <p class="poster">Live<br>Vocoder</p>
       <div class="sign"><div class="app-icon">K</div><span class="by">by Keopees</span></div>
-      <div class="wheel" data-wheel><div class="core" data-bind="chord">Lam</div></div>
+      <div class="wheel" id="wheel"><div class="core" data-bind="chord">Lam</div></div>
+      <p class="hint">Tocca una perlina per cambiare accordo e ottava.</p>
+
+      <div class="editor" id="editor" hidden>
+        <h2>Perlina da <span data-bind="edDita"></span>: <b data-bind="edName"></b></h2>
+        <div class="row"><span>Nota</span><div class="chips" id="chips-root"></div></div>
+        <div class="row"><span>Tipo</span><div class="chips" id="chips-type"></div></div>
+        <div class="row"><span>Ottava</span><div class="chips" id="chips-oct"></div></div>
+        <button class="done" data-act="done">Fatto</button>
+      </div>
+
+      <div class="settings">
+        <span class="title-set">
+          <button class="switch" role="switch" data-act="sw" data-val="titolo"><span class="track"></span>Titolo</button>
+          <input id="titolo" type="text" value="Ma Lei" maxlength="40" aria-label="Titolo accanto all'accordo">
+        </span>
+        <button class="switch" role="switch" data-act="sw" data-val="filtro"><span class="track"></span>Filtro rosa</button>
+        <button class="switch" role="switch" data-act="sw" data-val="specchio"><span class="track"></span>Specchio</button>
+        <button class="switch" role="switch" data-act="sw" data-val="conto"><span class="track"></span>Conto alla rovescia 3 s</button>
+      </div>
     </div>
-    <div class="c-right">
-      <div class="polaroid"><div class="frame"><canvas data-label=".11"></canvas></div><p class="cap">questo finisce nel video ♥</p></div>
+
+    <div class="right">
+      <div class="polaroid"><div class="frame"><canvas></canvas><div class="count" data-bind="count" hidden></div></div><p class="cap">questo finisce nel video ♥</p></div>
       <div class="dock">
         <div class="seg" role="group" aria-label="Modalità"><button data-act="mode" data-val="accordi">Accordi</button><button data-act="mode" data-val="nota">Nota singola</button></div>
         <div class="seg" role="group" aria-label="Formato"><button data-act="format" data-val="verticale">Verticale</button><button data-act="format" data-val="orizzontale">Orizzontale</button></div>
-        <button class="rec" data-act="rec"><span data-bind="recLabel">Registra</span>&nbsp;<span class="timer" data-bind="timer">00:00</span></button>
+        <button class="rec" data-act="rec"><span data-bind="recLabel">Registra</span><span class="timer" data-bind="timer">00:00</span></button>
       </div>
       <p class="file" data-bind="file"></p>
     </div>
   </div>
 </section>
 
-<nav class="sw" aria-label="Cambia variante"><button data-sw="-1" aria-label="Variante precedente">‹</button><span id="sw-label">A · Studio</span><button data-sw="1" aria-label="Variante successiva">›</button></nav>
-
 <script>
-const CHORDS = [
-  {n:'Do',  notes:['Do','Mi','Sol'], f:[261.63,329.63,392.00], dita:1},
-  {n:'Lam', notes:['La','Do','Mi'],  f:[220.00,261.63,329.63], dita:2},
-  {n:'Fa',  notes:['Fa','La','Do'],  f:[174.61,220.00,261.63], dita:3},
-  {n:'Sol', notes:['Sol','Si','Re'], f:[196.00,246.94,293.66], dita:4},
-  {n:'Mim', notes:['Mi','Sol','Si'], f:[164.81,196.00,246.94], dita:5},
-];
-// 21 punti della mano come MediaPipe, mano aperta, coordinate 0..1
+const NOTE = ['Do','Do♯','Re','Mi♭','Mi','Fa','Fa♯','Sol','La♭','La','Si♭','Si'];
+const TYPES = {M:{label:'Maggiore', suf:'', iv:[0,4,7]}, m:{label:'Minore', suf:'m', iv:[0,3,7]}, s7:{label:'Settima', suf:'7', iv:[0,4,7,10]}, sus:{label:'Sus4', suf:'sus4', iv:[0,5,7]}};
+const OCT = [[-1,'Bassa'],[0,'Media'],[1,'Alta']];
+// le 5 perline: 1 dito ... 5 dita. r = nota (0 = Do), t = tipo, o = ottava rispetto a quella centrale
+const beads = [{r:0,t:'M',o:0},{r:9,t:'m',o:0},{r:5,t:'M',o:0},{r:7,t:'M',o:0},{r:4,t:'m',o:0}];
+
 const HAND = [[.50,.95],[.38,.86],[.29,.75],[.23,.65],[.18,.56],[.40,.58],[.37,.42],[.35,.31],[.34,.21],[.50,.56],[.50,.38],[.50,.26],[.50,.15],[.59,.58],[.61,.42],[.62,.31],[.63,.22],[.67,.63],[.71,.51],[.73,.43],[.75,.35]];
 const BONES = [[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[0,17],[17,18],[18,19],[19,20]];
-const FINGERS = [[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16],[17,18,19,20]]; // pollice, indice, medio, anulare, mignolo
+const FINGERS = [[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16],[17,18,19,20]];
 const OPEN_ORDER = [1,2,3,4,0]; // 1 dito = indice ... 5 dita = anche il pollice
-const KEYS = ['A','B','C'];
-const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const pad = n => String(Math.floor(n)).padStart(2, '0');
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const css = getComputedStyle(document.documentElement);
 const C = Object.fromEntries(['rosa','rosa-chiaro','viola','viola-luce','prugna','prugna-2','crema','lilla'].map(k => [k, css.getPropertyValue('--' + k).trim()]));
+const rgba = (hex, a) => `rgba(${[1,3,5].map(i => parseInt(hex.slice(i, i + 2), 16)).join(',')},${a})`;
 const rnd = i => { const v = Math.sin(i * 127.1) * 43758.5453; return v - Math.floor(v); };
 const GLITTER = Array.from({length: 36}, (_, i) => ({x: rnd(i), y: rnd(i + 99) * .8, s: .4 + rnd(i + 7) * .8, p: rnd(i + 3) * 6.28, v: 1 + rnd(i + 11) * 2}));
-function star(x, cx, cy, r) {
-  x.beginPath(); x.moveTo(cx, cy - r);
-  x.quadraticCurveTo(cx, cy, cx + r, cy); x.quadraticCurveTo(cx, cy, cx, cy + r);
-  x.quadraticCurveTo(cx, cy, cx - r, cy); x.quadraticCurveTo(cx, cy, cx, cy - r); x.fill();
-}
-function heart(x, cx, cy, r) {
-  x.beginPath(); x.moveTo(cx, cy + r * .9);
-  x.bezierCurveTo(cx - r * 1.6, cy - r * .2, cx - r * .6, cy - r * 1.3, cx, cy - r * .45);
-  x.bezierCurveTo(cx + r * .6, cy - r * 1.3, cx + r * 1.6, cy - r * .2, cx, cy + r * .9);
-  x.fill(); x.stroke();
-}
-const rgba = (hex, a) => `rgba(${[1,3,5].map(i => parseInt(hex.slice(i, i + 2), 16)).join(',')},${a})`;
 
-const st = {mode:'accordi', format:'verticale', rec:false, recStart:0, file:'', i:1};
+const st = {mode:'accordi', format:'verticale', rec:false, recStart:0, file:'', i:1, edit:-1, count:0,
+            titolo:true, filtro:true, specchio:true, conto:true, title:'Ma Lei'};
 const fold = [0,0,0,0,0];
-let lastCycle = performance.now(), variant = 'A';
+let lastCycle = performance.now(), countTimer = 0;
 
-const label = () => st.mode === 'accordi' ? CHORDS[st.i].n : CHORDS[st.i].notes[0];
-const freqs = () => st.mode === 'accordi' ? CHORDS[st.i].f : [CHORDS[st.i].f[0]];
+const name = b => NOTE[b.r] + (st.mode === 'accordi' ? TYPES[b.t].suf : '');
+const freqs = b => (st.mode === 'accordi' ? TYPES[b.t].iv : [0]).map(iv => 261.63 * 2 ** ((b.r + iv) / 12 + b.o));
+const dita = i => `${i + 1} ${i ? 'dita' : 'dito'}`;
+const octMark = o => o < 0 ? ' ↓' : o > 0 ? ' ↑' : '';
 function fileName() {
   const d = new Date();
   return `Keopees ${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}.${pad(d.getMinutes())}.mp4`;
 }
 
-$$('[data-legend]').forEach(el => el.innerHTML = CHORDS.map((c, i) =>
-  `<li><button data-act="chord" data-val="${i}"><span class="beads" data-beads="${i}"></span><span>${c.dita} ${c.dita > 1 ? 'dita' : 'dito'}</span></button></li>`).join(''));
-$$('[data-wheel]').forEach(el => el.insertAdjacentHTML('beforeend', CHORDS.map((c, i) =>
-  `<button data-act="chord" data-val="${i}" style="--a:${i * 72}deg"><b data-name="${i}"></b><small>${c.dita} ${c.dita > 1 ? 'dita' : 'dito'}</small></button>`).join('')));
+$('#wheel').insertAdjacentHTML('beforeend', beads.map((_, i) =>
+  `<button data-act="bead" data-val="${i}" style="--a:${i * 72}deg"><b></b><small></small></button>`).join(''));
+$('#chips-root').innerHTML = NOTE.map((n, r) => `<button data-act="root" data-val="${r}">${n}</button>`).join('');
+$('#chips-type').innerHTML = Object.entries(TYPES).map(([k, t]) => `<button data-act="type" data-val="${k}">${t.label}</button>`).join('');
+$('#chips-oct').innerHTML = OCT.map(([o, l]) => `<button data-act="oct" data-val="${o}">${l}</button>`).join('');
 
 function render() {
-  document.documentElement.dataset.format = st.format;
-  document.documentElement.classList.toggle('is-rec', st.rec);
-  const c = CHORDS[st.i];
+  const root = document.documentElement;
+  root.dataset.format = st.format;
+  root.classList.toggle('is-rec', st.rec);
+  const cur = beads[st.i], ed = beads[st.edit];
   const bind = {
-    chord: label(),
-    notes: st.mode === 'accordi' ? c.notes.join(', ') : 'nota singola',
-    recLabel: st.rec ? 'Ferma' : 'Registra',
+    chord: name(cur),
+    recLabel: st.rec ? 'Ferma' : st.count ? 'Annulla' : 'Registra',
     file: st.rec ? `Salvo in Download: ${st.file}` : 'Si salva in Download come video MP4',
+    count: st.count || '',
+    edDita: ed ? dita(st.edit) : '',
+    edName: ed ? NOTE[ed.r] + TYPES[ed.t].suf + octMark(ed.o) : '',
   };
   for (const [k, v] of Object.entries(bind)) $$(`[data-bind="${k}"]`).forEach(el => el.textContent = v);
-  $$('[data-act="mode"]').forEach(b => b.setAttribute('aria-pressed', b.dataset.val === st.mode));
-  $$('[data-act="format"]').forEach(b => b.setAttribute('aria-pressed', b.dataset.val === st.format));
-  $$('[data-act="chord"]').forEach(b => b.classList.toggle('on', +b.dataset.val === st.i));
-  const nm = k => st.mode === 'accordi' ? k.n : k.notes[0];
-  $$('b[data-name]').forEach(b => b.textContent = nm(CHORDS[+b.dataset.name]));
-  $$('[data-beads]').forEach(b => b.innerHTML = [...nm(CHORDS[+b.dataset.beads]).toUpperCase()].map(ch => `<i>${ch}</i>`).join('') + '<i class="h">♥</i>');
+  $('[data-bind="count"]').hidden = !st.count;
+  $$('[data-act="bead"]').forEach((b, i) => {
+    b.querySelector('b').textContent = name(beads[i]);
+    b.querySelector('small').textContent = dita(i) + octMark(beads[i].o);
+    b.classList.toggle('on', i === st.i);
+    b.classList.toggle('editing', i === st.edit);
+    b.setAttribute('aria-label', `${name(beads[i])}, ${dita(i)}. Tocca per cambiarla`);
+  });
+  $('#editor').hidden = !ed;
+  const pressed = (act, v) => $$(`[data-act="${act}"]`).forEach(b => b.setAttribute('aria-pressed', b.dataset.val === String(v)));
+  pressed('mode', st.mode); pressed('format', st.format);
+  if (ed) { pressed('root', ed.r); pressed('type', ed.t); pressed('oct', ed.o); }
+  $$('[data-act="sw"]').forEach(b => b.setAttribute('aria-checked', st[b.dataset.val]));
+  $('#titolo').hidden = !st.titolo;
+}
+
+function startRec() { st.rec = true; st.recStart = performance.now(); st.file = fileName(); }
+function onRec() {
+  if (st.rec) { st.rec = false; return; }
+  if (st.count) { clearInterval(countTimer); st.count = 0; return; }
+  if (!st.conto) return startRec();
+  st.count = 3;
+  countTimer = setInterval(() => {
+    st.count--;
+    if (!st.count) { clearInterval(countTimer); startRec(); }
+    render();
+  }, 1000);
 }
 
 document.addEventListener('click', e => {
-  const sw = e.target.closest('[data-sw]');
-  if (sw) return go(+sw.dataset.sw);
   const b = e.target.closest('[data-act]');
   if (!b) return;
-  const a = b.dataset.act;
-  if (a === 'mode') st.mode = b.dataset.val;
-  if (a === 'format') st.format = b.dataset.val;
-  if (a === 'chord') { st.i = +b.dataset.val; lastCycle = performance.now(); }
-  if (a === 'rec') { st.rec = !st.rec; st.recStart = performance.now(); st.file = fileName(); }
+  const a = b.dataset.act, v = b.dataset.val, ed = beads[st.edit];
+  if (a === 'mode') st.mode = v;
+  if (a === 'format') st.format = v;
+  if (a === 'rec') onRec();
+  if (a === 'sw') st[v] = !st[v];
+  if (a === 'bead') { st.edit = st.edit === +v ? -1 : +v; if (st.edit >= 0) st.i = st.edit; }
+  if (a === 'done') st.edit = -1;
+  if (ed && a === 'root') ed.r = +v;
+  if (ed && a === 'type') ed.t = v;
+  if (ed && a === 'oct') ed.o = +v;
+  lastCycle = performance.now();
   render();
 });
-
-function show(v) {
-  variant = KEYS.includes(v) ? v : 'A';
-  $$('[data-v]').forEach(s => s.hidden = s.dataset.v !== variant);
-  const s = $$(`[data-v="${variant}"]`)[0];
-  document.getElementById('sw-label').textContent = `${variant} · ${s.dataset.name}`;
-}
-function go(d) {
-  const v = KEYS[(KEYS.indexOf(variant) + d + KEYS.length) % KEYS.length];
-  try { history.replaceState(null, '', '#' + v); } catch {}
-  show(v);
-}
-document.addEventListener('keydown', e => {
-  if (e.target.closest('input,textarea,[contenteditable]')) return;
-  if (e.key === 'ArrowLeft') go(-1);
-  if (e.key === 'ArrowRight') go(1);
-});
-addEventListener('hashchange', () => show(location.hash.slice(1).toUpperCase()));
+$('#titolo').addEventListener('input', e => st.title = e.target.value);
 
 function handPoints() {
   return HAND.map((p, j) => {
@@ -303,8 +249,19 @@ function handPoints() {
     return [p[0] + (q[0] - p[0]) * k, p[1] + (q[1] - p[1]) * k];
   });
 }
+function star(x, cx, cy, r) {
+  x.beginPath(); x.moveTo(cx, cy - r);
+  x.quadraticCurveTo(cx, cy, cx + r, cy); x.quadraticCurveTo(cx, cy, cx, cy + r);
+  x.quadraticCurveTo(cx, cy, cx - r, cy); x.quadraticCurveTo(cx, cy, cx, cy - r); x.fill();
+}
+function heart(x, cx, cy, r) {
+  x.beginPath(); x.moveTo(cx, cy + r * .9);
+  x.bezierCurveTo(cx - r * 1.6, cy - r * .2, cx - r * .6, cy - r * 1.3, cx, cy - r * .45);
+  x.bezierCurveTo(cx + r * .6, cy - r * 1.3, cx + r * 1.6, cy - r * .2, cx, cy + r * .9);
+  x.fill(); x.stroke();
+}
 
-// Disegna un fotogramma del video: camera (simulata) + mano + onda + nome accordo.
+// Un fotogramma del video: camera (simulata) + filtro rosa (disattivabile) + mano + onda + accordo e titolo.
 function draw(cv, t) {
   const r = cv.getBoundingClientRect();
   if (!r.width) return;
@@ -313,20 +270,24 @@ function draw(cv, t) {
   if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
   const x = cv.getContext('2d'), m = Math.min(W, H);
 
+  x.save();
+  if (st.specchio) { x.translate(W, 0); x.scale(-1, 1); }
   let g = x.createLinearGradient(0, 0, 0, H);
-  g.addColorStop(0, C['prugna-2']); g.addColorStop(1, C.prugna);
-  x.fillStyle = g; x.fillRect(0, 0, W, H);
-  g = x.createRadialGradient(W * .4, H * .42, 0, W * .4, H * .42, m * .9);
-  g.addColorStop(0, rgba(C.rosa, .38)); g.addColorStop(1, rgba(C.rosa, 0));
-  x.fillStyle = g; x.fillRect(0, 0, W, H);
-  x.fillStyle = rgba(C.prugna, .75);
+  if (st.filtro) {
+    g.addColorStop(0, C['prugna-2']); g.addColorStop(1, C.prugna);
+    x.fillStyle = g; x.fillRect(0, 0, W, H);
+    g = x.createRadialGradient(W * .4, H * .42, 0, W * .4, H * .42, m * .9);
+    g.addColorStop(0, rgba(C.rosa, .38)); g.addColorStop(1, rgba(C.rosa, 0));
+    x.fillStyle = g; x.fillRect(0, 0, W, H);
+    x.fillStyle = rgba(C.prugna, .75);
+  } else { // camera "naturale": stanza neutra
+    g.addColorStop(0, '#9A8F86'); g.addColorStop(1, '#5B524C');
+    x.fillStyle = g; x.fillRect(0, 0, W, H);
+    x.fillStyle = 'rgba(40,32,30,.7)';
+  }
   x.beginPath(); x.ellipse(W * .36, H * .4, m * .13, m * .16, 0, 0, 7); x.fill();
   x.beginPath(); x.ellipse(W * .36, H * .95, m * .38, m * .26, 0, 0, 7); x.fill();
-  x.fillStyle = rgba(C.crema, .45); x.textAlign = 'right';
-  x.font = `${Math.round(m * .032)}px Nunito, sans-serif`;
-  x.fillText('camera simulata', W - m * .05, m * .07);
-  x.textAlign = 'left';
-  GLITTER.forEach(g => { x.fillStyle = rgba(C.crema, .2 + .8 * Math.max(0, Math.sin(t * g.v + g.p))); star(x, g.x * W, g.y * H, m * .014 * g.s); });
+  if (st.filtro) GLITTER.forEach(s => { x.fillStyle = rgba(C.crema, .2 + .8 * Math.max(0, Math.sin(t * s.v + s.p))); star(x, s.x * W, s.y * H, m * .014 * s.s); });
 
   const hs = m * .6;
   const ox = W * .68 - hs / 2 + Math.sin(t * .8) * m * .02, oy = H * .42 - hs / 2 + Math.sin(t * 1.1) * m * .015;
@@ -335,21 +296,26 @@ function draw(cv, t) {
   x.shadowColor = C.rosa; x.shadowBlur = m * .035;
   x.beginPath(); BONES.forEach(([a, b]) => { x.moveTo(...P[a]); x.lineTo(...P[b]); }); x.stroke();
   x.shadowBlur = 0; x.lineWidth = m * .004;
-  const BEADS = [C.rosa, C.lilla, C.crema, C['viola-luce']];
+  const BEAD = [C.rosa, C.lilla, C.crema, C['viola-luce']];
   P.forEach((p, j) => {
     const f = [4, 8, 12, 16, 20].indexOf(j);
     if (f >= 0 && fold[f] < .5) { // dito alzato: cuore + glitter
-      x.fillStyle = C.rosa; heart(x, p[0], p[1], m * .028);
+      x.strokeStyle = C.crema; x.fillStyle = C.rosa; heart(x, p[0], p[1], m * .028);
       x.fillStyle = C.crema;
       for (const k of [0, 2.1, 4.2]) star(x, p[0] + Math.cos(t * 2 + k) * m * .05, p[1] + Math.sin(t * 2 + k) * m * .05, m * .011);
       return;
     }
-    x.strokeStyle = C.prugna;
-    x.beginPath(); x.arc(p[0], p[1], m * .016, 0, 7); x.fillStyle = BEADS[j % 4]; x.fill(); x.stroke();
+    x.strokeStyle = C.prugna; x.fillStyle = BEAD[j % 4];
+    x.beginPath(); x.arc(p[0], p[1], m * .016, 0, 7); x.fill(); x.stroke();
   });
-  x.strokeStyle = C.crema;
+  x.restore();
 
-  const fs = freqs(), y0 = H * .86, amp = Math.min(H * .06, m * .09);
+  x.fillStyle = rgba(C.crema, .55); x.textAlign = 'right';
+  x.font = `${Math.round(m * .032)}px Nunito, sans-serif`;
+  x.fillText('camera simulata', W - m * .05, m * .07);
+  x.textAlign = 'left';
+
+  const fs = freqs(beads[st.i]), y0 = H * .86, amp = Math.min(H * .06, m * .09);
   const env = .55 + .45 * Math.abs(Math.sin(t * 1.9) * Math.sin(t * .6 + 1));
   const wave = (scale, alpha) => {
     x.beginPath();
@@ -367,26 +333,35 @@ function draw(cv, t) {
   x.lineWidth = m * .008; wave(1, 1);
   x.shadowBlur = 0;
 
-  const s = m * +cv.dataset.label, tx = m * .06, ty = m * .05 + s * 1.05, d = Math.max(2, Math.round(s * .07));
+  // accordo (+ titolo accanto, es. "Fa – Ma Lei")
+  const chord = name(beads[st.i]), s = m * .11, tx = m * .06, ty = m * .05 + s * 1.05, d = Math.max(2, Math.round(s * .07));
   x.font = `${s}px Pacifico, cursive`;
-  x.fillStyle = rgba(C.prugna, .55); x.fillText(label(), tx + d * 1.8, ty + d * 1.8);
-  x.fillStyle = C.crema; for (let i = d; i > 0; i--) x.fillText(label(), tx + i, ty + i);
-  x.fillStyle = C.rosa; x.fillText(label(), tx, ty);
+  x.fillStyle = rgba(C.prugna, .55); x.fillText(chord, tx + d * 1.8, ty + d * 1.8);
+  x.fillStyle = C.crema; for (let i = d; i > 0; i--) x.fillText(chord, tx + i, ty + i);
+  x.fillStyle = C.rosa; x.fillText(chord, tx, ty);
+  const title = st.title.trim();
+  if (st.titolo && title) {
+    const sx = tx + x.measureText(chord).width + s * .2, text = '– ' + title;
+    let ts = s * .5;
+    x.font = `${ts}px Pacifico, cursive`;
+    const room = W - m * .05 - sx, w = x.measureText(text).width;
+    if (w > room) { ts *= room / w; x.font = `${ts}px Pacifico, cursive`; }
+    x.fillStyle = rgba(C.prugna, .6); x.fillText(text, sx + 2, ty + 2);
+    x.fillStyle = C.crema; x.fillText(text, sx, ty);
+  }
 }
 
 let lastTimer = '';
 function frame(now) {
-  if (now - lastCycle > 2600) { st.i = (st.i + 1) % CHORDS.length; lastCycle = now; render(); }
-  const open = new Set(OPEN_ORDER.slice(0, CHORDS[st.i].dita));
+  if (st.edit < 0 && now - lastCycle > 2600) { st.i = (st.i + 1) % beads.length; lastCycle = now; render(); }
+  const open = new Set(OPEN_ORDER.slice(0, st.i + 1));
   fold.forEach((v, f) => { const target = open.has(f) ? 0 : 1; fold[f] = reduce ? target : v + (target - v) * .15; });
-  const cv = $$(`[data-v="${variant}"] canvas`)[0];
-  draw(cv, reduce ? 1.3 : now / 1000);
+  draw($('canvas'), reduce ? 1.3 : now / 1000);
   const secs = st.rec ? (now - st.recStart) / 1000 : 0, txt = `${pad(secs / 60)}:${pad(secs % 60)}`;
   if (txt !== lastTimer) { $$('[data-bind="timer"]').forEach(el => el.textContent = txt); lastTimer = txt; }
   requestAnimationFrame(frame);
 }
 
-show((new URLSearchParams(location.search).get('variant') || location.hash.slice(1)).toUpperCase());
 render();
 requestAnimationFrame(frame);
 </script>
