@@ -3,6 +3,10 @@ import { NOTE, TIPI, OCT, noteDellAccordo, nomeAccordo, percentuale } from './ac
 import { EFF, EKEYS, KN, KM, GROUPS, DEVS, DM } from './manopole.js';
 import { DEF_SONG, SONG_KEYS, controllaNome, datiIniziali } from './canzoni.js';
 import { disegna, misura } from './video.js';
+import * as motore from './motore.js';
+import { avviso, stato } from './avvisi.js';
+import { parametriRust, scegli } from './manopole.js';
+const invoke = (...a) => window.__TAURI__.core.invoke(...a);
 
 let dati = datiIniziali(), songs = dati.canzoni;
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
@@ -127,6 +131,7 @@ function sync() {
   $$('[data-act="eff"]').forEach(b => b.setAttribute('aria-pressed', b.dataset.val === st.eff));
   const ek = $('.effknob .dial'); if (ek) ek.style.setProperty('--p', [.278, .5, .722][EKEYS.indexOf(st.eff)]);
   $$('[data-act="reset"]').forEach(b => b.disabled = isDef());
+  invia();
 }
 // Il display spiega la manopola sotto il mouse; "solo Vocoder" sta qui invece che sotto la manopola.
 function setLcd(k) {
@@ -178,7 +183,7 @@ document.addEventListener('click', e => {
   build();
 });
 document.addEventListener('input', e => { if (e.target.id === 'song-name') st.ui.draft = e.target.value; });
-document.addEventListener('change', e => { const k = e.target.dataset?.dev; if (k) { st.dev[k] = e.target.value; setLcd('dev:' + k); } });
+document.addEventListener('change', e => { const k = e.target.dataset?.dev; if (k) { st.dev[k] = e.target.value; setLcd('dev:' + k); controllaDispositivi(); } });
 
 // Manopole: trascina su/giù, rotellina, frecce, doppio clic = valore di partenza.
 let drag = null, wheelAcc = 0;
@@ -230,14 +235,45 @@ function frame(now) {
     disegna(cv, {
       video: camVideo, mani: st.mani, specchio: st.specchio, filtro: st.filtro, mano: st.mano, lv: st.lv, lvl: lvPct(st.lv) / 100,
       eff: st.eff, hz: freqs(b), fermi: st.fermi, accordo: name(b), titolo: st.titolo ? songs[st.song].name.trim() : '',
-      conto: st.ui.conto, livello: 0,
+      conto: st.ui.conto, livello: motore.livello(),
     }, reduce ? 1.3 : now / 1000);
   }
   requestAnimationFrame(frame);
 }
 
+// Manda a Rust manopole, quota d'Effetto e note che suonano (motore.js manda solo quello che è cambiato).
+function invia() {
+  motore.parametri({ ...parametriRust(st), muto: st.muto ? 1 : 0 });
+  const { hz, k } = noteDellAccordo(st.beads[st.i], st.mode, st.snd.voci);
+  st.fermi ? motore.note([], 0) : motore.note(hz, k);
+}
+
+// Ogni 2 s e a ogni scelta: i Dispositivi veri. Si usa la scelta di Keopees se c'è, altrimenti quello di macOS (la scelta resta salvata).
+let giroDisp = null;
+function controllaDispositivi() {
+  return (giroDisp ??= (async () => {
+    const audio = await invoke('dispositivi');
+    const ins = audio.filter(d => d.ingresso), outs = audio.filter(d => d.uscita);
+    const prima = JSON.stringify(st.liste);
+    st.liste = { ...st.liste, in: ins.map(d => d.nome), out: outs.map(d => d.nome) };
+    const inn = scegli(st.liste.in, st.dev.in, ins.find(d => d.predefinito_ingresso)?.nome);
+    const out = scegli(st.liste.out, st.dev.out, outs.find(d => d.predefinito_uscita)?.nome);
+    const tipo = outs.find(d => d.nome === out)?.tipo;
+    st.muto = tipo === 'altoparlanti';
+    if (inn !== st.att.in || out !== st.att.out) {
+      st.att.in = inn; st.att.out = out;
+      await motore.avvia(inn, out).catch(e => avviso('audio', `Non riesco ad accendere l'audio: ${e}`));
+    }
+    stato('cuffie', st.muto, "Servono le cuffie a filo: con gli altoparlanti l'Ascolto resta spento, perché fischierebbe.");
+    stato('bluetooth', tipo === 'bluetooth', "Con le cuffie Bluetooth l'Ascolto arriva in ritardo: meglio quelle a filo.");
+    if (JSON.stringify(st.liste) !== prima) build(); else invia();
+  })().finally(() => (giroDisp = null)));
+}
+
 async function avvio() {
   build();
+  await controllaDispositivi();
+  setInterval(controllaDispositivi, 2000);
   requestAnimationFrame(frame);
 }
 avvio();

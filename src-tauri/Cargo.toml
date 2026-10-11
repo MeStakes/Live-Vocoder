@@ -7,7 +7,9 @@ edition = "2021"
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
+cpal = "0.18"
 objc2 = "0.6"
 objc2-foundation = "0.3"
+ringbuf = "0.5"
 serde = { version = "1", features = ["derive"] }
 tauri = { version = "2", features = [] }
