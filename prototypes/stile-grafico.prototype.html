@@ -115,6 +115,7 @@ body{background:var(--notte);color:var(--crema);font:16px/1.45 var(--f-testo);pa
       </div>
 
       <div class="settings">
+        <button class="switch" role="switch" data-act="sw" data-val="vocoder"><span class="track"></span>Vocoder sulla voce</button>
         <span class="title-set">
           <button class="switch" role="switch" data-act="sw" data-val="titolo"><span class="track"></span>Titolo</button>
           <input id="titolo" type="text" value="Ma Lei" maxlength="40" aria-label="Titolo accanto all'accordo">
@@ -159,7 +160,7 @@ const rnd = i => { const v = Math.sin(i * 127.1) * 43758.5453; return v - Math.f
 const GLITTER = Array.from({length: 36}, (_, i) => ({x: rnd(i), y: rnd(i + 99) * .8, s: .4 + rnd(i + 7) * .8, p: rnd(i + 3) * 6.28, v: 1 + rnd(i + 11) * 2}));
 
 const st = {mode:'accordi', format:'verticale', rec:false, recStart:0, file:'', i:1, edit:-1, count:0,
-            titolo:true, filtro:true, specchio:true, conto:true, title:'Ma Lei', mano:'sinistra', lv:3};
+            titolo:true, filtro:true, specchio:true, conto:true, title:'Ma Lei', mano:'sinistra', lv:3, vocoder:true};
 const fold = [0,0,0,0,0], fold2 = [0,0,0,0,0]; // mano degli accordi, mano dell'intensità
 let lastCycle = performance.now(), lastLv = performance.now(), countTimer = 0;
 
@@ -335,7 +336,8 @@ function draw(cv, t) {
   x.textAlign = 'left';
 
   const fs = freqs(beads[st.i]), y0 = H * .86, amp = Math.min(H * .06, m * .09) * (.35 + .65 * lvl);
-  const env = .55 + .45 * Math.abs(Math.sin(t * 1.9) * Math.sin(t * .6 + 1));
+  // vocoder acceso: l'onda segue la voce (respira); spento: accordi suonati fissi come una tastiera
+  const env = st.vocoder ? .55 + .45 * Math.abs(Math.sin(t * 1.9) * Math.sin(t * .6 + 1)) : .85;
   const wave = (scale, alpha) => {
     x.beginPath();
     for (let i = 0; i <= 220; i++) {
