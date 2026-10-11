@@ -69,5 +69,9 @@ Un brano di Keopees salvato nell'app: il nome, le sue 5 Note, la Modalità, il F
 _Avoid_: preset, set, progetto
 
 **Impostazioni**:
-Le scelte di una Canzone raccolte dietro un unico pulsante: titolo nel video, filtro, specchio, conto alla rovescia, mano degli accordi, camera. Effetto e Suono non ne fanno parte. Fa eccezione la cartella delle Registrazioni, che vale per tutte le Canzoni.
+Le scelte di una Canzone raccolte dietro un unico pulsante: titolo nel video, filtro, specchio, conto alla rovescia, mano degli accordi. Effetto, Suono e Dispositivi non ne fanno parte. Fa eccezione la cartella delle Registrazioni, che vale per tutte le Canzoni.
 _Avoid_: preferenze, opzioni, settings
+
+**Dispositivi**:
+L'Ingresso audio (il microfono in cui canta), l'Uscita audio (dove sente l'Ascolto) e la Camera del video, scelti da Keopees. Valgono per tutte le Canzoni, come la cartella delle Registrazioni.
+_Avoid_: periferiche, device, hardware, sorgenti
