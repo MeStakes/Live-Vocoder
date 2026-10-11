@@ -1,4 +1,16 @@
-# Stile grafico (proposta per #7)
+# Stile grafico (deciso)
+
+Approvato da Riccardo il 2026-10-11. Stile girly rosa/viola: Keopees è fan di Taylor Swift, ma nell'app non vanno nome, loghi o testi di Taylor, solo i motivi (perline dei braccialetti dell'amicizia, glitter, cuori).
+
+## Schermata: variante Poster
+
+Prototipo: https://claude.ai/artifact/BW8gzdaKt6Nvr8xigGaAu3 (sorgente sul branch `prototype/stile-grafico`).
+
+- A sinistra: titolo grande, icona "by Keopees", ruota-braccialetto con le 5 perline (1–5 dita). Perline viola, quella che suona rosa.
+- Tocca una perlina: si apre il pannello Nota / Tipo (Maggiore, Minore, Settima, Sus4) / Ottava (Bassa, Media, Alta), poi Fatto.
+- Sotto la ruota, in riga: Vocoder sulla voce, Titolo (+ casella, nel video "Fa – Ma Lei"), Filtro rosa, Specchio, Conto alla rovescia 3 s, Accordi con la mano Sinistra/Destra.
+- A destra: video dritto in una polaroid, sotto Modalità, Formato e Registra.
+- Nel video: mani a perline (cuori sulle dita alzate), glitter, onda degli accordi, nome accordo + titolo, colonna di 5 perline per l'intensità della seconda mano. Il Filtro rosa toglie solo il colore dello sfondo.
 
 Riferimento: `reference-ma-lei.png` (copertina "Ma Lei" by Keopees).
 
