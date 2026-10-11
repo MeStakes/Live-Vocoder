@@ -9,6 +9,7 @@ import { parametriRust, scegli } from './manopole.js';
 import { apriCamera } from './camera.js';
 import { avviaMani } from './mani.js';
 import { avviaRegistrazione } from './registra.js';
+import { guida } from './guida.js';
 const invoke = (...a) => window.__TAURI__.core.invoke(...a);
 
 let dati = datiIniziali(), songs = dati.canzoni;
@@ -39,10 +40,7 @@ const videoSet = () => `<div class="vset">
   <div class="vrow">Accordi con la mano <span class="seg" role="group" aria-label="Mano degli accordi"><button data-act="mano" data-val="sinistra">Sinistra</button><button data-act="mano" data-val="destra">Destra</button></span></div>
   <div class="vrow">Cartella delle Registrazioni <button class="pill small" data-act="cartella">${esc(nomeCartella())}</button></div>
 </div>`;
-const guideSheet = () => `<h2>Guida</h2><p class="lbl">IL SUONO</p>
-  <p class="ctx">L'Effetto è cosa succede alla tua voce. Le manopole lo regolano e si salvano nella Canzone.</p>
-  <dl class="gl">${EKEYS.map(e => `<dt>${EFF[e].name}</dt><dd>${EFF[e].sub}</dd>`).join('')}
-  ${KN.map(K => `<dt>${K.name}</dt><dd>${K.help}${K.for.length < 3 ? ` <span class="only">${onlyLabel(K)}</span>` : ''}</dd>`).join('')}</dl>`;
+const guideSheet = () => guida(onlyLabel);
 const knob = K => `<div class="knob${applies(K) ? '' : ' off'}" data-knob="${K.k}" data-help="${K.k}" role="slider" tabindex="0" aria-label="${K.name}" aria-valuemin="0" aria-valuemax="${K.vals.length - 1}">
   <div class="dial"></div><b>${K.cname || K.name}</b><output data-show="${K.k}"></output></div>`;
 const desk = () => `<div class="desk-head"><h3>Suono</h3><p class="lcd" data-lcd></p>

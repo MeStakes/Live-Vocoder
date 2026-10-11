@@ -24,3 +24,10 @@ test("le classi messe su .app non sono anche classi di elementi (se no $('.x') t
   const classi = new Set([...html.matchAll(/class="([^"]+)"/g), ...ui.matchAll(/class="([^"$]+)"/g)].flatMap(m => m[1].split(/\s+/)));
   for (const c of sulApp) assert.ok(!classi.has(c), `.${c} è anche la classe di un elemento`);
 });
+test('la guida ha i tre capitoli, in ordine', async () => {
+  const { guida } = await import('../src/guida.js');
+  const h = guida(K => 'solo ' + K.for.join(' e '));
+  const i = ['COME SI SUONA', 'IL SUONO', 'LA PARTE TECNICA'].map(t => h.indexOf(t));
+  assert.ok(i.every(x => x >= 0) && i[0] < i[1] && i[1] < i[2], String(i));
+  for (const t of ['Anti-fruscio', 'Cuffie a filo', 'Reazioni', 'Mac aperto']) assert.ok(h.includes(t), t);
+});
