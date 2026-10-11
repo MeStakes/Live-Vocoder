@@ -70,7 +70,8 @@ body{background:var(--notte);color:var(--crema);font:16px/1.45 var(--f-testo);pa
 .track::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--rosa-chiaro);transition:transform .15s}
 .switch[aria-checked="true"] .track{background:var(--viola);box-shadow:none}
 .switch[aria-checked="true"] .track::after{transform:translateX(18px);background:var(--crema)}
-.title-set{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap}
+.title-set{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.9rem;font-weight:800}
+.settings .seg button{padding:6px 12px;font-size:.85rem}
 #titolo{width:11rem;max-width:100%;padding:6px 12px;border:0;border-radius:999px;background:var(--crema);color:var(--prugna);font:400 1rem/1.3 var(--f-titolo);box-shadow:inset 0 0 0 2px var(--rosa-chiaro)}
 
 /* video */
@@ -121,6 +122,7 @@ body{background:var(--notte);color:var(--crema);font:16px/1.45 var(--f-testo);pa
         <button class="switch" role="switch" data-act="sw" data-val="filtro"><span class="track"></span>Filtro rosa</button>
         <button class="switch" role="switch" data-act="sw" data-val="specchio"><span class="track"></span>Specchio</button>
         <button class="switch" role="switch" data-act="sw" data-val="conto"><span class="track"></span>Conto alla rovescia 3 s</button>
+        <span class="title-set">Accordi con la mano <span class="seg" role="group" aria-label="Mano degli accordi"><button data-act="mano" data-val="sinistra">Sinistra</button><button data-act="mano" data-val="destra">Destra</button></span></span>
       </div>
     </div>
 
@@ -157,9 +159,9 @@ const rnd = i => { const v = Math.sin(i * 127.1) * 43758.5453; return v - Math.f
 const GLITTER = Array.from({length: 36}, (_, i) => ({x: rnd(i), y: rnd(i + 99) * .8, s: .4 + rnd(i + 7) * .8, p: rnd(i + 3) * 6.28, v: 1 + rnd(i + 11) * 2}));
 
 const st = {mode:'accordi', format:'verticale', rec:false, recStart:0, file:'', i:1, edit:-1, count:0,
-            titolo:true, filtro:true, specchio:true, conto:true, title:'Ma Lei'};
-const fold = [0,0,0,0,0];
-let lastCycle = performance.now(), countTimer = 0;
+            titolo:true, filtro:true, specchio:true, conto:true, title:'Ma Lei', mano:'sinistra', lv:3};
+const fold = [0,0,0,0,0], fold2 = [0,0,0,0,0]; // mano degli accordi, mano dell'intensità
+let lastCycle = performance.now(), lastLv = performance.now(), countTimer = 0;
 
 const name = b => NOTE[b.r] + (st.mode === 'accordi' ? TYPES[b.t].suf : '');
 const freqs = b => (st.mode === 'accordi' ? TYPES[b.t].iv : [0]).map(iv => 261.63 * 2 ** ((b.r + iv) / 12 + b.o));
@@ -200,7 +202,7 @@ function render() {
   });
   $('#editor').hidden = !ed;
   const pressed = (act, v) => $$(`[data-act="${act}"]`).forEach(b => b.setAttribute('aria-pressed', b.dataset.val === String(v)));
-  pressed('mode', st.mode); pressed('format', st.format);
+  pressed('mode', st.mode); pressed('format', st.format); pressed('mano', st.mano);
   if (ed) { pressed('root', ed.r); pressed('type', ed.t); pressed('oct', ed.o); }
   $$('[data-act="sw"]').forEach(b => b.setAttribute('aria-checked', st[b.dataset.val]));
   $('#titolo').hidden = !st.titolo;
@@ -225,6 +227,7 @@ document.addEventListener('click', e => {
   const a = b.dataset.act, v = b.dataset.val, ed = beads[st.edit];
   if (a === 'mode') st.mode = v;
   if (a === 'format') st.format = v;
+  if (a === 'mano') st.mano = v;
   if (a === 'rec') onRec();
   if (a === 'sw') st[v] = !st[v];
   if (a === 'bead') { st.edit = st.edit === +v ? -1 : +v; if (st.edit >= 0) st.i = st.edit; }
@@ -237,11 +240,11 @@ document.addEventListener('click', e => {
 });
 $('#titolo').addEventListener('input', e => st.title = e.target.value);
 
-function handPoints() {
+function handPoints(fd) {
   return HAND.map((p, j) => {
     const f = FINGERS.findIndex(fg => fg.includes(j));
     if (f < 0) return p;
-    const k = fold[f], order = FINGERS[f].indexOf(j);
+    const k = fd[f], order = FINGERS[f].indexOf(j);
     if (f === 0) return [p[0] + (.46 - p[0]) * k * .7 * (order / 3), p[1] + (.72 - p[1]) * k * .7 * (order / 3)];
     if (order === 0) return p;
     const m = HAND[FINGERS[f][0]];
@@ -270,7 +273,7 @@ function drawHand(x, P, m, t, glow, raised) {
   P.forEach((p, j) => {
     const f = [4, 8, 12, 16, 20].indexOf(j);
     if (f >= 0 && raised(f)) {
-      x.strokeStyle = C.crema; x.fillStyle = C.rosa; heart(x, p[0], p[1], m * .028);
+      x.strokeStyle = C.crema; x.fillStyle = glow; heart(x, p[0], p[1], m * .028);
       x.fillStyle = C.crema;
       for (const k of [0, 2.1, 4.2]) star(x, p[0] + Math.cos(t * 2 + k) * m * .05, p[1] + Math.sin(t * 2 + k) * m * .05, m * .011);
       return;
@@ -288,7 +291,7 @@ function draw(cv, t) {
   const W = Math.round(r.width * dpr), H = Math.round(r.height * dpr);
   if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
   const x = cv.getContext('2d'), m = Math.min(W, H);
-  const lvl = .5 + .5 * Math.sin(t * .5); // seconda mano simulata: 0 bassa ... 1 alta
+  const lvl = (st.lv - 1) / 4; // intensità: dita alzate della seconda mano, 1-5
 
   x.save();
   if (st.specchio) { x.translate(W, 0); x.scale(-1, 1); }
@@ -310,16 +313,20 @@ function draw(cv, t) {
   if (st.filtro) GLITTER.forEach(s => { x.fillStyle = rgba(C.crema, .2 + .8 * Math.max(0, Math.sin(t * s.v + s.p))); star(x, s.x * W, s.y * H, m * .014 * s.s); });
 
   const hs = m * .6;
-  const ox = W * .68 - hs / 2 + Math.sin(t * .8) * m * .02, oy = H * .42 - hs / 2 + Math.sin(t * 1.1) * m * .015;
-  drawHand(x, handPoints().map(([px, py]) => [ox + px * hs, oy + py * hs]), m, t, C.rosa, f => fold[f] < .5);
-  // seconda mano: la sua altezza decide l'intensità del vocoder, mostrata dalla barra col cuore
-  const hs2 = m * .38, ox2 = W * .16 - hs2 / 2, oy2 = H * (.62 - .3 * lvl) - hs2 / 2;
-  drawHand(x, HAND.map(([px, py]) => [ox2 + (1 - px) * hs2, oy2 + py * hs2]), m, t, C['viola-luce'], () => false);
-  const bx = W * .04, top = H * .2, bot = H * .7, bw = m * .022, ly = bot - (bot - top) * lvl;
-  x.fillStyle = rgba(C.crema, .2); x.beginPath(); x.roundRect(bx, top, bw, bot - top, bw / 2); x.fill();
-  g = x.createLinearGradient(0, bot, 0, top); g.addColorStop(0, C.viola); g.addColorStop(1, C.rosa);
-  x.fillStyle = g; x.beginPath(); x.roundRect(bx, ly, bw, bot - ly, bw / 2); x.fill();
-  x.strokeStyle = C.crema; x.lineWidth = m * .004; x.fillStyle = C.rosa; heart(x, bx + bw / 2, ly, m * .024);
+  // nell'immagine non specchiata la mano sinistra di Keopees sta a destra
+  const L = st.mano === 'sinistra', flip = (pts, f) => f ? pts.map(([px, py]) => [1 - px, py]) : pts;
+  const ox = W * (L ? .68 : .32) - hs / 2 + Math.sin(t * .8) * m * .02, oy = H * .42 - hs / 2 + Math.sin(t * 1.1) * m * .015;
+  drawHand(x, flip(handPoints(fold), !L).map(([px, py]) => [ox + px * hs, oy + py * hs]), m, t, C.rosa, f => fold[f] < .5);
+  // seconda mano: le dita alzate (1-5) sono l'intensità, mostrata da 5 perline in colonna
+  const hs2 = m * .38, ox2 = W * (L ? .16 : .84) - hs2 / 2 + Math.sin(t * .9 + 2) * m * .015, oy2 = H * .45 - hs2 / 2;
+  drawHand(x, flip(handPoints(fold2), L).map(([px, py]) => [ox2 + px * hs2, oy2 + py * hs2]), m, t, C['viola-luce'], f => fold2[f] < .5);
+  const bx = W * (L ? .05 : .95), r5 = m * .02;
+  x.lineWidth = m * .004; x.strokeStyle = C.crema;
+  for (let k = 0; k < 5; k++) {
+    x.beginPath(); x.arc(bx, H * .62 - k * r5 * 2.6, r5, 0, 7);
+    x.fillStyle = k >= st.lv ? rgba(C.crema, .2) : k === st.lv - 1 ? C.rosa : C['viola-luce'];
+    x.fill(); if (k < st.lv) x.stroke();
+  }
   x.restore();
 
   x.fillStyle = rgba(C.crema, .55); x.textAlign = 'right';
@@ -366,8 +373,12 @@ function draw(cv, t) {
 let lastTimer = '';
 function frame(now) {
   if (st.edit < 0 && now - lastCycle > 2600) { st.i = (st.i + 1) % beads.length; lastCycle = now; render(); }
-  const open = new Set(OPEN_ORDER.slice(0, st.i + 1));
-  fold.forEach((v, f) => { const target = open.has(f) ? 0 : 1; fold[f] = reduce ? target : v + (target - v) * .15; });
+  if (now - lastLv > 3700) { st.lv = st.lv % 5 + 1; lastLv = now; } // seconda mano simulata
+  const ease = (fd, n) => {
+    const open = new Set(OPEN_ORDER.slice(0, n));
+    fd.forEach((v, f) => { const target = open.has(f) ? 0 : 1; fd[f] = reduce ? target : v + (target - v) * .15; });
+  };
+  ease(fold, st.i + 1); ease(fold2, st.lv);
   draw($('canvas'), reduce ? 1.3 : now / 1000);
   const secs = st.rec ? (now - st.recStart) / 1000 : 0, txt = `${pad(secs / 60)}:${pad(secs % 60)}`;
   if (txt !== lastTimer) { $$('[data-bind="timer"]').forEach(el => el.textContent = txt); lastTimer = txt; }
