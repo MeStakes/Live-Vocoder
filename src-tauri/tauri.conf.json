@@ -1,0 +1,17 @@
+{
+  "productName": "Live Vocoder",
+  "version": "0.1.0",
+  "identifier": "com.keopees.live-vocoder",
+  "build": { "frontendDist": "../src" },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [{ "title": "Live Vocoder", "width": 1440, "height": 820, "minWidth": 1280, "minHeight": 720, "maximized": true, "backgroundThrottling": "disabled" }],
+    "security": { "csp": null }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["app", "dmg"],
+    "icon": ["icons/icon.icns", "icons/icon.png"],
+    "macOS": { "signingIdentity": "Live Vocoder", "hardenedRuntime": false }
+  }
+}
