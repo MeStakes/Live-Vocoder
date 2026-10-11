@@ -14,7 +14,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             audio::avvia_audio, audio::ferma_audio, audio::set, audio::set_note,
             dispositivi::dispositivi,
-            camera::camere, camera::prefer_camera,
+            camera::camere, camera::prefer_camera, camera::permessi, camera::apri_privacy,
             canzoni::leggi_canzoni, canzoni::scrivi_canzoni, canzoni::metti_da_parte_canzoni,
             registrazioni::apri_registrazione, registrazioni::aggiungi_pezzo, registrazioni::chiudi_registrazione,
             registrazioni::spazio_libero, registrazioni::guarda, registrazioni::mostra, registrazioni::butta,

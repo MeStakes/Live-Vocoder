@@ -286,6 +286,14 @@ function controllaDispositivi() {
     }
     stato('cuffie', st.muto, "Servono le cuffie a filo: con gli altoparlanti l'Ascolto resta spento, perché fischierebbe.");
     stato('bluetooth', tipo === 'bluetooth', "Con le cuffie Bluetooth l'Ascolto arriva in ritardo: meglio quelle a filo.");
+    // la scelta di Keopees resta salvata: quando il Dispositivo ricompare, si torna a quello
+    stato('manca-in', !!st.dev.in && inn !== st.dev.in, `«${st.dev.in}» non c'è: uso «${inn}».`);
+    stato('manca-out', !!st.dev.out && out !== st.dev.out, `«${st.dev.out}» non c'è: uso «${out}».`);
+    stato('manca-cam', !!st.dev.cam && cam !== st.dev.cam, `«${st.dev.cam}» non c'è: uso «${cam}».`);
+    stato('iphone', !st.dev.cam && !camere.some(c => c.iphone), "iPhone non trovato: uso la camera del Mac. Avvicinalo, con Wi-Fi e Bluetooth accesi.");
+    const [mic, vid] = await invoke('permessi');
+    stato('perm-mic', mic === 1 || mic === 2, 'Live Vocoder non può usare il microfono.', [['Apri Impostazioni', () => invoke('apri_privacy', { che: 'microfono' })]]);
+    stato('perm-cam', vid === 1 || vid === 2, 'Live Vocoder non può usare la camera.', [['Apri Impostazioni', () => invoke('apri_privacy', { che: 'camera' })]]);
     if (JSON.stringify(st.liste) !== prima) build(); else invia();
   })().finally(() => (giroDisp = null)));
 }
@@ -367,6 +375,7 @@ async function avvio() {
   dati.cartella ??= predefinita;
   openSong(Math.max(0, songs.findIndex(s => s.name === dati.aperta)), false);
   if (c.rotto) avviso('canzoni', 'Non riuscivo a leggere le Canzoni salvate: le ho messe da parte e si riparte da «Ma Lei».');
+  if (!dati.guidaVista) { st.ui.panel = 'guida'; dati.guidaVista = true; } // la guida si apre da sola al primo avvio
   build();
   await controllaDispositivi();
   setInterval(controllaDispositivi, 2000);

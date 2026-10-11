@@ -52,6 +52,20 @@ pub fn prefer_camera(nome: String) -> Result<(), String> {
     Ok(())
 }
 
+// AVAuthorizationStatus: 0 da chiedere, 1 limitato, 2 negato, 3 concesso. (Microfono, Camera)
+#[tauri::command]
+pub fn permessi() -> (isize, isize) {
+    let s = |t: &str| -> isize { unsafe { msg_send![class!(AVCaptureDevice), authorizationStatusForMediaType: &*NSString::from_str(t)] } };
+    (s("soun"), s("vide"))
+}
+
+// Apre Impostazioni di Sistema → Privacy e sicurezza → Microfono o Camera.
+#[tauri::command]
+pub fn apri_privacy(che: String) {
+    let pannello = if che == "camera" { "Privacy_Camera" } else { "Privacy_Microphone" };
+    let _ = std::process::Command::new("open").arg(format!("x-apple.systempreferences:com.apple.preference.security?{pannello}")).status();
+}
+
 #[cfg(test)]
 mod tests {
     // A mano, per vedere le camere vere (elencarle non chiede permessi): cargo test --release elenca_camere -- --ignored --nocapture
@@ -61,5 +75,6 @@ mod tests {
         for c in super::camere() {
             println!("{} (iPhone: {})", c.nome, c.iphone);
         }
+        println!("permessi (microfono, camera): {:?}", super::permessi());
     }
 }
