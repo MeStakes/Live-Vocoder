@@ -260,6 +260,25 @@ function heart(x, cx, cy, r) {
   x.bezierCurveTo(cx + r * .6, cy - r * 1.3, cx + r * 1.6, cy - r * .2, cx, cy + r * .9);
   x.fill(); x.stroke();
 }
+// Mano a perline; le dita alzate (raised) diventano cuori con glitter.
+function drawHand(x, P, m, t, glow, raised) {
+  x.lineCap = 'round'; x.strokeStyle = C.crema; x.lineWidth = m * .011;
+  x.shadowColor = glow; x.shadowBlur = m * .035;
+  x.beginPath(); BONES.forEach(([a, b]) => { x.moveTo(...P[a]); x.lineTo(...P[b]); }); x.stroke();
+  x.shadowBlur = 0; x.lineWidth = m * .004;
+  const BEAD = [C.rosa, C.lilla, C.crema, C['viola-luce']];
+  P.forEach((p, j) => {
+    const f = [4, 8, 12, 16, 20].indexOf(j);
+    if (f >= 0 && raised(f)) {
+      x.strokeStyle = C.crema; x.fillStyle = C.rosa; heart(x, p[0], p[1], m * .028);
+      x.fillStyle = C.crema;
+      for (const k of [0, 2.1, 4.2]) star(x, p[0] + Math.cos(t * 2 + k) * m * .05, p[1] + Math.sin(t * 2 + k) * m * .05, m * .011);
+      return;
+    }
+    x.strokeStyle = C.prugna; x.fillStyle = BEAD[j % 4];
+    x.beginPath(); x.arc(p[0], p[1], m * .016, 0, 7); x.fill(); x.stroke();
+  });
+}
 
 // Un fotogramma del video: camera (simulata) + filtro rosa (disattivabile) + mano + onda + accordo e titolo.
 function draw(cv, t) {
@@ -269,6 +288,7 @@ function draw(cv, t) {
   const W = Math.round(r.width * dpr), H = Math.round(r.height * dpr);
   if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
   const x = cv.getContext('2d'), m = Math.min(W, H);
+  const lvl = .5 + .5 * Math.sin(t * .5); // seconda mano simulata: 0 bassa ... 1 alta
 
   x.save();
   if (st.specchio) { x.translate(W, 0); x.scale(-1, 1); }
@@ -291,23 +311,15 @@ function draw(cv, t) {
 
   const hs = m * .6;
   const ox = W * .68 - hs / 2 + Math.sin(t * .8) * m * .02, oy = H * .42 - hs / 2 + Math.sin(t * 1.1) * m * .015;
-  const P = handPoints().map(([px, py]) => [ox + px * hs, oy + py * hs]);
-  x.lineCap = 'round'; x.strokeStyle = C.crema; x.lineWidth = m * .011;
-  x.shadowColor = C.rosa; x.shadowBlur = m * .035;
-  x.beginPath(); BONES.forEach(([a, b]) => { x.moveTo(...P[a]); x.lineTo(...P[b]); }); x.stroke();
-  x.shadowBlur = 0; x.lineWidth = m * .004;
-  const BEAD = [C.rosa, C.lilla, C.crema, C['viola-luce']];
-  P.forEach((p, j) => {
-    const f = [4, 8, 12, 16, 20].indexOf(j);
-    if (f >= 0 && fold[f] < .5) { // dito alzato: cuore + glitter
-      x.strokeStyle = C.crema; x.fillStyle = C.rosa; heart(x, p[0], p[1], m * .028);
-      x.fillStyle = C.crema;
-      for (const k of [0, 2.1, 4.2]) star(x, p[0] + Math.cos(t * 2 + k) * m * .05, p[1] + Math.sin(t * 2 + k) * m * .05, m * .011);
-      return;
-    }
-    x.strokeStyle = C.prugna; x.fillStyle = BEAD[j % 4];
-    x.beginPath(); x.arc(p[0], p[1], m * .016, 0, 7); x.fill(); x.stroke();
-  });
+  drawHand(x, handPoints().map(([px, py]) => [ox + px * hs, oy + py * hs]), m, t, C.rosa, f => fold[f] < .5);
+  // seconda mano: la sua altezza decide l'intensità del vocoder, mostrata dalla barra col cuore
+  const hs2 = m * .38, ox2 = W * .16 - hs2 / 2, oy2 = H * (.62 - .3 * lvl) - hs2 / 2;
+  drawHand(x, HAND.map(([px, py]) => [ox2 + (1 - px) * hs2, oy2 + py * hs2]), m, t, C['viola-luce'], () => false);
+  const bx = W * .04, top = H * .2, bot = H * .7, bw = m * .022, ly = bot - (bot - top) * lvl;
+  x.fillStyle = rgba(C.crema, .2); x.beginPath(); x.roundRect(bx, top, bw, bot - top, bw / 2); x.fill();
+  g = x.createLinearGradient(0, bot, 0, top); g.addColorStop(0, C.viola); g.addColorStop(1, C.rosa);
+  x.fillStyle = g; x.beginPath(); x.roundRect(bx, ly, bw, bot - ly, bw / 2); x.fill();
+  x.strokeStyle = C.crema; x.lineWidth = m * .004; x.fillStyle = C.rosa; heart(x, bx + bw / 2, ly, m * .024);
   x.restore();
 
   x.fillStyle = rgba(C.crema, .55); x.textAlign = 'right';
@@ -315,7 +327,7 @@ function draw(cv, t) {
   x.fillText('camera simulata', W - m * .05, m * .07);
   x.textAlign = 'left';
 
-  const fs = freqs(beads[st.i]), y0 = H * .86, amp = Math.min(H * .06, m * .09);
+  const fs = freqs(beads[st.i]), y0 = H * .86, amp = Math.min(H * .06, m * .09) * (.35 + .65 * lvl);
   const env = .55 + .45 * Math.abs(Math.sin(t * 1.9) * Math.sin(t * .6 + 1));
   const wave = (scale, alpha) => {
     x.beginPath();
