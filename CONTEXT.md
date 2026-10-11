@@ -31,3 +31,11 @@ _Avoid_: take, clip, export
 **Formato**:
 L'orientamento della registrazione: Verticale (per i social) o Orizzontale.
 _Avoid_: aspect ratio, risoluzione
+
+**Perlina**:
+Uno dei 5 accordi (o note) che Keopees prepara prima di cantare: nota, tipo e ottava. Le dita alzate della mano degli accordi (1–5) scelgono quale suona.
+_Avoid_: slot, preset, pad
+
+**Intensità**:
+Livello da 1 a 5 scelto dalle dita alzate della seconda mano. Con il vocoder acceso è quanto vocoder si sente rispetto alla Voce pulita; spento è il volume degli accordi.
+_Avoid_: volume, gain, mix
