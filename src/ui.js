@@ -308,7 +308,7 @@ function suMani({ mani, nota, dita2 }) {
 }
 
 // --- Registrazione (spec §6)
-let reg = null, inizio = 0, orologi = [], predefinita = '';
+let reg = null, inizio = 0, orologi = [], predefinita = '', tentativo = 0, fermando = false;
 const pausa = ms => new Promise(r => setTimeout(r, ms));
 const mmss = ms => { const s = Math.floor(ms / 1000); return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; };
 const nomeCartella = () => dati.cartella === predefinita ? 'Filmati/Live Vocoder' : dati.cartella.replace(/^\/Users\/[^/]+/, '~');
@@ -319,23 +319,34 @@ async function scegliCartella() {
 }
 
 async function registra() {
+  if (fermando) return; // uno Stop sta ancora chiudendo il file di prima
+  // Ogni avvio ha il suo numero: uno Stop (o un altro Registra) lo rende vecchio, e dopo ogni attesa si controlla.
+  const mio = ++tentativo, vivo = () => mio === tentativo && st.ui.rec;
   const actx = new AudioContext({ sampleRate: 48000 }); // subito, dentro il clic
   const cartella = dati.cartella;
   st.ui.rec = true; st.ui.conto = st.conto ? 3 : 0; inizio = performance.now(); build();
   if (await invoke('spazio_libero', { cartella }) < 2e9) avviso('disco', 'Restano meno di 2 GB sul disco: circa 20 minuti di video.');
   for (let n = st.conto ? 3 : 0; n > 0; n--) {
+    if (!vivo()) { actx.close(); return; } // Stop durante il conto: nessun file
     st.ui.conto = n; paint();
     await pausa(1000);
-    if (!st.ui.rec) { actx.close(); return; } // Stop durante il conto: nessun file
   }
+  if (!vivo()) { actx.close(); return; }
   st.ui.conto = 0;
+  let r;
   try {
-    reg = await avviaRegistrazione({ actx, canvas: cv, cartella, canzone: songs[st.song].name,
+    r = await avviaRegistrazione({ actx, canvas: cv, cartella, canzone: songs[st.song].name,
       onErrore: e => fermaRegistrazione(`La Registrazione si è fermata: ${e}`) });
   } catch (e) {
-    st.ui.rec = false; build();
+    if (mio === tentativo) { st.ui.rec = false; build(); }
     return avviso('rec', `Non riesco a registrare: ${e}`);
   }
+  if (!vivo()) { // Stop premuto mentre partiva: il file appena aperto va nel Cestino, niente "Salvato"
+    fermando = true;
+    try { invoke('butta', { path: await r.ferma() }).catch(() => {}); } finally { fermando = false; }
+    return build();
+  }
+  reg = r;
   inizio = performance.now();
   orologi = [
     setInterval(paint, 500),
@@ -343,19 +354,17 @@ async function registra() {
       if (await invoke('spazio_libero', { cartella }) < 5e8) fermaRegistrazione("Disco quasi pieno: ho fermato la Registrazione e l'ho salvata.");
     }, 5000),
   ];
-  if (!st.ui.rec) { // Stop premuto mentre partiva: il file appena aperto va nel Cestino, niente "Salvato"
-    const r = reg; reg = null; orologi.forEach(clearInterval);
-    invoke('butta', { path: await r.ferma() }).catch(() => {});
-    return build();
-  }
   paint();
 }
 
 async function fermaRegistrazione(motivo) {
-  if (!reg) { st.ui.rec = false; st.ui.conto = 0; return build(); } // durante il conto alla rovescia
+  tentativo++; // un avvio ancora in corso diventa vecchio e si ferma da solo
+  if (!reg) { st.ui.rec = false; st.ui.conto = 0; return build(); } // durante il conto alla rovescia o mentre partiva
   const r = reg; reg = null;
   orologi.forEach(clearInterval);
-  const path = await r.ferma();
+  fermando = true;
+  let path;
+  try { path = await r.ferma(); } finally { fermando = false; }
   st.ui.rec = false; build();
   if (motivo) avviso('rec', motivo);
   const nome = path.split('/').pop().replace(/\.mp4$/, '');

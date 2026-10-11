@@ -33,12 +33,12 @@ export async function avviaRegistrazione({ actx, canvas, cartella, canzone, onEr
         stacca();
         tracce.forEach(t => t.stop());
         actx.close();
-        await invoke('chiudi_registrazione');
+        await invoke('chiudi_registrazione', { path });
         return path;
       },
     };
   } catch (e) {
-    await invoke('chiudi_registrazione');
+    await invoke('chiudi_registrazione', { path });
     actx.close();
     throw e;
   }
