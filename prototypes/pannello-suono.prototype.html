@@ -126,6 +126,10 @@ button:disabled{opacity:.45;cursor:default}
 .effknob .dial::before{content:"";position:absolute;inset:5px;border-radius:50%;background:var(--perla-rosa)}
 .effknob .dial::after{content:"";position:absolute;left:50%;top:50%;width:4px;height:22px;margin:-22px 0 0 -2px;border-radius:2px;background:var(--crema);transform-origin:50% 100%;transform:rotate(calc(-135deg + var(--p) * 270deg))}
 .effnames{display:flex;flex-direction:column;gap:3px}
+.grp > .devs{flex-direction:column;gap:5px}
+.dev{display:grid;grid-template-columns:auto 190px;white-space:nowrap;align-items:center;gap:8px;font-size:.72rem;font-weight:800}
+.dev select{-webkit-appearance:none;appearance:none;width:100%;padding:4px 26px 4px 10px;border:0;border-radius:999px;color:var(--crema);font:700 .75rem/1.3 var(--f-testo);box-shadow:inset 0 0 0 1.5px var(--rosa-chiaro);
+  background:var(--prugna-2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23FF8FC4'/%3E%3C/svg%3E") no-repeat right 10px center}
 .effnames button{all:unset;cursor:pointer;font-weight:800;font-size:.85rem;color:rgb(255 240 217 / .55)}
 .effnames button[aria-pressed="true"]{color:var(--rosa-chiaro)}
 
@@ -237,6 +241,16 @@ const KN = [
 ];
 const KM = Object.fromEntries(KN.map(K => [K.k, K]));
 const GROUPS = [['Mano', ['i1','i5']], ['Accordo', ['voci','scivola']], ['Synth', ['timbro','bande','morb']], ['Voce', ['cons','gate']], ['Cuffia', ['vol']]];
+// Dispositivi del Mac (finti nel prototipo): valgono per tutte le Canzoni, come la cartella delle Registrazioni.
+const DEVS = [
+  {k:'in', name:'Ingresso audio', opts:['Microfono del MacBook Air', 'Microfono USB'],
+   help:'Il microfono in cui canti. Quello del Mac va bene, un microfono USB suona meglio.'},
+  {k:'out', name:'Uscita audio', opts:['Cuffie a filo', 'Altoparlanti del MacBook Air', 'AirPods di Keopees'],
+   help:'Dove senti l\'Ascolto. Servono cuffie a filo: con gli altoparlanti l\'Ascolto resta spento perché fischierebbe, con le cuffie Bluetooth arriva in ritardo.'},
+  {k:'cam', name:'Camera', opts:['iPhone di Keopees', 'Camera FaceTime HD'],
+   help:'La camera del video. L\'iPhone dà il video verticale migliore; se non c\'è, si usa quella del Mac.'},
+];
+const DM = Object.fromEntries(DEVS.map(d => [d.k, d]));
 
 // --- Canzoni: ognuna salva le 5 Note, Modalità, Formato, Effetto, tutte le manopole e le Impostazioni. Canzoni di prova.
 const DEF_SND = Object.fromEntries(KN.map(K => [K.k, K.def]));
@@ -257,6 +271,7 @@ const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAl
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const esc = s => String(s).replace(/[&<>"]/g, c => `&#${c.charCodeAt(0)};`);
 const st = {i:0, edit:-1, lv:3, song:0, ...structuredClone(songs[0].data),
+            dev:Object.fromEntries(DEVS.map(d => [d.k, d.opts[0]])),
             ui:{panel:null, desk:true, menu:false, form:null, draft:'', err:''}};
 const snapshot = () => structuredClone(Object.fromEntries(SONG_KEYS.map(k => [k, st[k]])));
 // Apri una Canzone: la seconda mano riparte da Intensità 3 (deciso in "Funzionalità must-have v1").
@@ -285,7 +300,6 @@ const videoSet = () => `<div class="vset">
   <div class="vrow">${sw('titolo', 'Titolo nel video')}<b>il nome della Canzone</b></div>
   ${sw('filtro', 'Filtro rosa')}${sw('specchio', 'Specchio')}${sw('conto', 'Conto alla rovescia 3 s')}
   <div class="vrow">Accordi con la mano <span class="seg" role="group" aria-label="Mano degli accordi"><button data-act="mano" data-val="sinistra">Sinistra</button><button data-act="mano" data-val="destra">Destra</button></span></div>
-  <div class="vrow">Camera <b>iPhone di Keopees</b></div>
   <div class="vrow">Cartella delle Registrazioni <b>Filmati/Live Vocoder</b></div>
 </div>`;
 const guideSheet = () => `<h2>Guida</h2><p class="lbl">IL SUONO</p>
@@ -302,6 +316,8 @@ const desk = () => `<div class="desk-head"><h3>Suono</h3><p class="lcd" data-lcd
     <div class="grp"><span>Effetto</span><div class="effknob"><button class="dial" data-act="effcycle" aria-label="Cambia Effetto"></button>
       <div class="effnames">${EKEYS.map(e => `<button data-act="eff" data-val="${e}" data-help="eff:${e}">${EFF[e].name}</button>`).join('')}</div></div></div>
     ${GROUPS.map(([g, ks]) => `<div class="grp"><span>${g}</span><div>${ks.map(k => knob(KM[k])).join('')}</div></div>`).join('')}
+    <div class="grp"><span>Dispositivi</span><div class="devs">${DEVS.map(d => `<label class="dev" data-help="dev:${d.k}">${d.name}
+      <select id="dev-${d.k}" data-dev="${d.k}">${d.opts.map(o => `<option${o === st.dev[d.k] ? ' selected' : ''}>${esc(o)}</option>`).join('')}</select></label>`).join('')}</div></div>
   </div>` : ''}`;
 const songMenu = () => {
   const u = st.ui, f = u.form, cur = esc(songs[st.song].name);
@@ -387,6 +403,7 @@ function setLcd(k) {
   const el = $('[data-lcd]');
   if (!el) return;
   if (!k) return void (el.textContent = LCD);
+  if (k.startsWith('dev:')) { const D = DM[k.slice(4)]; return void (el.textContent = `${D.name}: ${D.help}`); }
   if (k.startsWith('eff:')) { const E = EFF[k.slice(4)]; return void (el.textContent = `${E.name}: ${E.sub}`); }
   const K = KM[k];
   el.textContent = `${K.name}: ${K.help}${K.for.length < 3 ? ` Vale ${onlyLabel(K)}.` : ''}`;
@@ -431,6 +448,7 @@ document.addEventListener('click', e => {
   build();
 });
 document.addEventListener('input', e => { if (e.target.id === 'song-name') st.ui.draft = e.target.value; });
+document.addEventListener('change', e => { const k = e.target.dataset?.dev; if (k) { st.dev[k] = e.target.value; setLcd('dev:' + k); } });
 
 // Manopole: trascina su/giù, rotellina, frecce, doppio clic = valore di partenza.
 let drag = null, wheelAcc = 0;
