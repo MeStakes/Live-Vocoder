@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Prova Suono (PROTOTIPO)</title>
+<style>
+  body { font: 15px -apple-system, sans-serif; margin: 20px auto; max-width: 900px; background: #1d0b29; color: #f6e8ff; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  p { margin: 4px 0 14px; color: #d9c2ea; }
+  fieldset { border: 1px solid #7a3d9e; border-radius: 10px; margin: 0 0 14px; padding: 10px 14px; }
+  legend { padding: 0 6px; color: #ff9be4; }
+  .row { display: flex; align-items: center; gap: 10px; margin: 8px 0; flex-wrap: wrap; }
+  .row > b { width: 150px; font-weight: 500; }
+  select, button, input { font: inherit; }
+  button { background: #3a1950; color: #f6e8ff; border: 1px solid #7a3d9e; border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+  button.on, button.go { background: #ff6ad5; color: #1d0b29; border-color: #ff6ad5; }
+  .seg { display: inline-flex; gap: 4px; flex-wrap: wrap; }
+  .big button { min-width: 64px; padding: 10px 14px; font-size: 17px; }
+  input[type=range] { width: 220px; accent-color: #ff6ad5; }
+  .val { min-width: 48px; color: #ffd0f2; }
+  #stato { font-size: 17px; background: #2a0f3a; border-radius: 8px; padding: 12px; line-height: 1.5; }
+  pre { white-space: pre-wrap; background: #000; padding: 8px; height: 110px; overflow: auto; font-size: 12px; border-radius: 8px; }
+  .off { opacity: 0.35; }
+  kbd { background: #3a1950; border-radius: 4px; padding: 0 5px; }
+</style>
+</head>
+<body>
+<h1>Suono del vocoder · PROTOTIPO usa e getta</h1>
+<p>Solo con le cuffie a filo (senza, fischia). Canta e cambia il suono finché ti piace.
+  Tasti <kbd>1</kbd>–<kbd>5</kbd> = Perlina (mano degli accordi), <kbd>Q</kbd> <kbd>W</kbd> <kbd>E</kbd> <kbd>R</kbd> <kbd>T</kbd> = Intensità 1–5 (seconda mano).</p>
+
+<fieldset><legend>Audio</legend>
+  <div class="row"><b>Microfono</b><select id="in"></select></div>
+  <div class="row"><b>Cuffie</b><select id="outdev"></select>
+    <button id="refresh">Aggiorna elenco</button>
+    <button id="start" class="go">Avvia</button><button id="stop">Ferma</button></div>
+  <div class="row"><b>Voce da</b>
+    <span class="seg" data-p="fonte"><button value="0" class="on">Microfono (come Keopees)</button><button value="1">File voce in loop</button></span>
+    <input type="file" id="file" accept="audio/*"></div>
+  <div class="row"><b>Noise gate</b><input type="range" data-p="gate" min="0" max="1" step="0.05" value="0"><span class="val"></span> (alza finché, in silenzio, il fruscio sparisce)</div>
+  <div class="row"><b>Volume cuffie</b><input type="range" data-p="volume" min="0.25" max="6" step="0.25" value="2"><span class="val"></span></div>
+</fieldset>
+
+<fieldset><legend>Mani (finte)</legend>
+  <div class="row"><b>Perlina</b>
+    <span class="seg big" data-p="perlina"><button value="1" class="on">Do</button><button value="2">Sol</button><button value="3">Lam</button><button value="4">Fa</button><button value="5">Rem</button></span></div>
+  <div class="row"><b>Intensità</b>
+    <span class="seg big" data-p="intensita"><button value="1">1</button><button value="2">2</button><button value="3" class="on">3</button><button value="4">4</button><button value="5">5</button></span></div>
+</fieldset>
+
+<fieldset><legend>Suono</legend>
+  <div class="row"><b>Effetto sulla voce</b>
+    <span class="seg" data-p="effetto"><button value="1" class="on">Vocoder</button><button value="2">Coro (harmonizer)</button><button value="0">Spento (tastiera)</button></span></div>
+  <div class="row"><b>Voci dell'accordo</b>
+    <span class="seg" data-p="voci"><button value="3">3 (triade)</button><button value="4" class="on">4 (+ basso)</button><button value="5">5 (+ basso + ottava sopra)</button></span></div>
+  <div class="row" data-for="0 1"><b>Ottava</b>
+    <span class="seg" data-p="ottava"><button value="3">3 (bassa)</button><button value="4" class="on">4 (come la voce)</button></span></div>
+  <div class="row" data-for="0 1"><b>Timbro</b>
+    <span class="seg" data-p="timbro"><button value="0">Sega (robot classico)</button><button value="1" class="on">Supersaw (coro largo)</button><button value="2">Quadra (vuoto, anni '80)</button></span></div>
+  <div class="row" data-for="1"><b>Bande</b>
+    <span class="seg" data-p="bande"><button value="8">8</button><button value="12">12</button><button value="16">16</button><button value="24" class="on">24</button><button value="32">32</button></span></div>
+  <div class="row" data-for="0 1"><b>Morbidezza</b><input type="range" data-p="morbidezza" min="0" max="1" step="0.05" value="0"><span class="val"></span></div>
+  <div class="row"><b>Scivolata tra accordi</b><input type="range" data-p="scivolata" min="0" max="0.4" step="0.01" value="0"><span class="val"></span></div>
+  <div class="row" data-for="1 2"><b>Consonanti chiare</b><input type="range" data-p="sibilanti" min="0" max="1" step="0.05" value="0.15"><span class="val"></span></div>
+  <div class="row"><b id="l1">Intensità 1</b><input type="range" data-p="int1" min="0" max="1" step="0.05" value="0.6"><span class="val"></span></div>
+  <div class="row"><b id="l5">Intensità 5</b><input type="range" data-p="int5" min="0" max="1" step="0.05" value="0.9"><span class="val"></span></div>
+</fieldset>
+
+<div id="stato"></div>
+<div class="row"><button id="save">Salva gli ultimi 15 secondi</button> <span>(file WAV in Download/suono-vocoder, per farlo sentire a Keopees)</span></div>
+<pre id="out"></pre>
+<script src="main.js"></script>
+</body>
+</html>

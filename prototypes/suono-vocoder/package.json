@@ -1,0 +1,8 @@
+{
+  "name": "suono-vocoder",
+  "private": true,
+  "scripts": {
+    "prova": "tauri build --bundles app && open \"src-tauri/target/release/bundle/macos/Prova Suono.app\""
+  },
+  "devDependencies": { "@tauri-apps/cli": "2.12.2" }
+}
