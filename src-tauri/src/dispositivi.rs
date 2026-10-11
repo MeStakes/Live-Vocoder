@@ -64,9 +64,9 @@ fn tipo(trasporto: u32, uid: &str) -> Tipo {
 
 #[derive(Serialize, Debug)]
 pub struct Dispositivo {
-    nome: String,
-    ingresso: bool,
-    uscita: bool,
+    pub(crate) nome: String,
+    pub(crate) ingresso: bool,
+    pub(crate) uscita: bool,
     tipo: Tipo,
     predefinito_ingresso: bool,
     predefinito_uscita: bool,

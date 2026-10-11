@@ -147,3 +147,24 @@ fn gira(
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // A mano: ogni nome di CoreAudio deve esistere anche in cpal (dispositivi.rs), se no avvia_audio dice «manca …».
+    // cargo test --release nomi_uguali -- --ignored --nocapture
+    #[test]
+    #[ignore]
+    fn nomi_uguali() {
+        let host = cpal::default_host();
+        let mut cpal: Vec<String> = host.devices().unwrap().map(|d| nome(&d)).collect();
+        let mut ca: Vec<String> = crate::dispositivi::dispositivi().iter().filter(|d| d.ingresso || d.uscita).map(|d| d.nome.clone()).collect();
+        cpal.sort();
+        cpal.dedup();
+        ca.sort();
+        println!("cpal: {cpal:?}\ncoreaudio: {ca:?}");
+        // cpal elenca anche i dispositivi combinati senza canali: basta che ogni nome di CoreAudio ci sia
+        assert!(ca.iter().all(|n| cpal.contains(n)), "nomi diversi");
+    }
+}
