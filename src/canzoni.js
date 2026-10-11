@@ -27,3 +27,30 @@ export function controllaNome(n, songs, except) {
   if (songs.some((s, i) => i !== except && s.name.toLowerCase() === n.toLowerCase())) return "C'è già una Canzone con questo nome.";
   return '';
 }
+
+// Dai dati salvati: null se non si leggono (il file va messo da parte, non sovrascritto); i campi mancanti si completano.
+export function interpreta(testo) {
+  let d;
+  try { d = JSON.parse(testo); } catch { return null; }
+  if (!d || !Array.isArray(d.canzoni) || !d.canzoni.length) return null;
+  return { ...datiIniziali(), ...d, dispositivi: d.dispositivi ?? {}, canzoni: d.canzoni.map((c) => canzone(c.name, c.data)) };
+}
+
+const invoke = (...a) => window.__TAURI__.core.invoke(...a);
+
+export async function carica() {
+  let t;
+  try { t = await invoke('leggi_canzoni'); } catch { t = ''; }
+  if (t == null) return { dati: datiIniziali(), rotto: false };
+  const dati = interpreta(t);
+  if (dati) return { dati, rotto: false };
+  await invoke('metti_da_parte_canzoni').catch(() => {});
+  return { dati: datiIniziali(), rotto: true };
+}
+
+// Salvataggio automatico: dopo 300 ms senza modifiche.
+let attesa;
+export function salva(dati) {
+  clearTimeout(attesa);
+  attesa = setTimeout(() => invoke('scrivi_canzoni', { json: JSON.stringify(dati) }), 300);
+}

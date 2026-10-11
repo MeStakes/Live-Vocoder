@@ -33,3 +33,19 @@ test('il nome diventa una cartella: mai fuori, mai nascosta, mai doppia', () => 
   assert.equal(controllaNome('x'.repeat(41), songs, -1), 'Il nome è troppo lungo.');
   assert.equal(controllaNome('Cuore di vetro', songs, -1), '');
 });
+import { interpreta } from '../src/canzoni.js';
+
+test('canzoni.json rovinato o vuoto: null, così non si sovrascrive', () => {
+  for (const t of ['', '{', 'null', '{"canzoni":[]}', '[]']) assert.equal(interpreta(t), null, t);
+});
+
+test('canzoni.json di una versione vecchia: si completano i campi mancanti', () => {
+  const d = interpreta(JSON.stringify({ aperta: 'Notte', canzoni: [{ name: 'Notte', data: { eff: 'vocoder', snd: { bande: 16 } } }] }));
+  assert.equal(d.aperta, 'Notte');
+  assert.equal(d.guidaVista, false);
+  assert.deepEqual(d.dispositivi, {});
+  assert.equal(d.canzoni[0].data.eff, 'vocoder');
+  assert.equal(d.canzoni[0].data.snd.bande, 16);
+  assert.equal(d.canzoni[0].data.snd.vol, 2);
+  assert.equal(d.canzoni[0].data.beads.length, 5);
+});

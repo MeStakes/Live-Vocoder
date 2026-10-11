@@ -1,7 +1,7 @@
 // Schermata di Live Vocoder: lo script del prototipo pannello-suono (a0270c0), con dati e logica nei moduli.
 import { NOTE, TIPI, OCT, noteDellAccordo, nomeAccordo, percentuale } from './accordo.js';
 import { EFF, EKEYS, KN, KM, GROUPS, DEVS, DM } from './manopole.js';
-import { DEF_SONG, SONG_KEYS, controllaNome, datiIniziali } from './canzoni.js';
+import { DEF_SONG, SONG_KEYS, controllaNome, datiIniziali, carica, salva } from './canzoni.js';
 import { disegna, misura } from './video.js';
 import * as motore from './motore.js';
 import { avviso, stato } from './avvisi.js';
@@ -132,6 +132,7 @@ function sync() {
   const ek = $('.effknob .dial'); if (ek) ek.style.setProperty('--p', [.278, .5, .722][EKEYS.indexOf(st.eff)]);
   $$('[data-act="reset"]').forEach(b => b.disabled = isDef());
   invia();
+  ricorda();
 }
 // Il display spiega la manopola sotto il mouse; "solo Vocoder" sta qui invece che sotto la manopola.
 function setLcd(k) {
@@ -242,6 +243,14 @@ function frame(now) {
 }
 
 // Manda a Rust manopole, quota d'Effetto e note che suonano (motore.js manda solo quello che è cambiato).
+// Ogni modifica si salva da sola: non c'è un tasto Salva (spec §8).
+function ricorda() {
+  songs[st.song].data = snapshot();
+  dati.aperta = songs[st.song].name;
+  dati.dispositivi = st.dev;
+  salva(dati);
+}
+
 function invia() {
   motore.parametri({ ...parametriRust(st), muto: st.muto ? 1 : 0 });
   const { hz, k } = noteDellAccordo(st.beads[st.i], st.mode, st.snd.voci);
@@ -271,6 +280,10 @@ function controllaDispositivi() {
 }
 
 async function avvio() {
+  const c = await carica();
+  dati = c.dati; songs = dati.canzoni; st.dev = dati.dispositivi;
+  openSong(Math.max(0, songs.findIndex(s => s.name === dati.aperta)), false);
+  if (c.rotto) avviso('canzoni', 'Non riuscivo a leggere le Canzoni salvate: le ho messe da parte e si riparte da «Ma Lei».');
   build();
   await controllaDispositivi();
   setInterval(controllaDispositivi, 2000);
