@@ -6,19 +6,17 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&family=Nunito:wght@400;700;800&family=Pacifico&display=swap">
 <style>
-/* PROTOTIPO usa-e-getta, ticket "Pannello del Suono" (#14).
-   Tre varianti di dove stanno Effetto e manopole del Suono nella schermata Poster, sulla stessa pagina:
-   A = Cassetto (tutto dentro Impostazioni), B = Sul poster (Suono sempre in vista), C = Banco (manopole in fondo).
-   Si cambia con la barra in basso, con ← → o con #A #B #C nell'indirizzo (gli artifact non passano ?variant=).
-   Camera e suono simulati: nessun audio. Partito dal prototipo "Stile grafico" (variante Poster). */
+/* PROTOTIPO usa-e-getta, ticket "Pannello del Suono" (#14). Variante scelta: C, il banco del Suono in fondo alla finestra.
+   Tutta la schermata sta nella finestra, senza scroll verticale: ruota e video si rimpiccioliscono con l'altezza.
+   Le varianti A (Cassetto) e B (Sul poster) sono nella storia del branch prototype/pannello-suono.
+   Camera e suono simulati: nessun audio. */
 :root{
-  /* Layout: finestra Mac; a sinistra titolo, Canzone, ruota di perline; a destra video-polaroid e comandi; il Suono cambia posto per variante */
+  /* Layout: finestra intera; sopra a sinistra titolo, Canzone e ruota di perline, a destra video-polaroid e comandi; sotto il banco del Suono */
   --rosa:#FF4F9A; --rosa-chiaro:#FF8FC4; --confetto:#FFD3E7;
   --viola:#6B2BD9; --viola-luce:#A27BFF;
   --prugna:#2B1145; --prugna-2:#43205F; --prugna-tenue:#6A4D7F; --notte:#1A0A2B;
   --crema:#FFF0D9; --lilla:#DCC6FF;
-  --bordo:rgb(255 240 217 / .12); --ombra:rgb(10 2 20 / .65);
-  --tl-r:#FF5F57; --tl-g:#FEBC2E; --tl-v:#28C840;
+  --ombra:rgb(10 2 20 / .65);
   --f-titolo:"Pacifico","Brush Script MT",cursive;
   --f-etichetta:"Amatic SC","Arial Narrow",sans-serif;
   --f-testo:"Nunito","Avenir Next",system-ui,sans-serif;
@@ -29,70 +27,101 @@
   color-scheme:dark;
 }
 :root[data-format="orizzontale"]{--ar:16/9;--arn:1.7778}
-body{margin:0;background:var(--notte);color:var(--crema);font:16px/1.45 var(--f-testo);padding-inline:16px;padding-block:20px 96px}
-.intro,.state{max-width:1180px;margin:0 auto 16px;color:var(--confetto);font-size:.95rem}
-.intro b{color:var(--crema)}
-.state{margin:14px auto 0;font-size:.82rem}
+html,body{height:100%}
+body{margin:0;background:var(--confetto);color:var(--prugna);font:16px/1.45 var(--f-testo)}
 [hidden]{display:none!important}
 [data-act]{cursor:pointer}
 [data-act]:focus-visible,input:focus-visible,.knob:focus-visible{outline:2px solid var(--viola);outline-offset:3px}
 button:disabled{opacity:.45;cursor:default}
 
-.win{max-width:1180px;margin-inline:auto;border-radius:14px;overflow:hidden;border:1px solid var(--bordo);box-shadow:0 30px 80px -30px var(--ombra)}
-.titlebar{display:flex;gap:8px;padding:11px 14px;background:var(--notte)}
-.titlebar i{width:12px;height:12px;border-radius:50%;background:var(--tl-r)}
-.titlebar i:nth-child(2){background:var(--tl-g)} .titlebar i:nth-child(3){background:var(--tl-v)}
-
-.body{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:36px;padding:32px;background:var(--confetto);color:var(--prugna)}
-.left,.right{display:flex;flex-direction:column;gap:20px;min-width:0}
+.app{position:relative;height:100dvh;display:grid;grid-template-rows:minmax(0,1fr) auto}
+.main{min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:32px;padding:22px 32px 18px}
+.left,.right{min-height:0;display:flex;flex-direction:column;gap:14px}
 .right{align-items:center}
-.poster{margin:0;font:400 clamp(3.4rem,9vw,6.4rem)/1.05 var(--f-titolo);color:var(--viola);text-shadow:var(--retro)}
-.sign{display:flex;align-items:center;gap:16px}
-.by{font:700 1.6rem/1 var(--f-etichetta);letter-spacing:.14em;text-transform:uppercase}
-.app-icon{--s:72px;flex:none;width:var(--s);height:var(--s);box-sizing:border-box;padding-bottom:calc(var(--s)*.06);border-radius:calc(var(--s)*.225);background:linear-gradient(var(--rosa-chiaro),var(--rosa));display:grid;place-items:center;font:400 calc(var(--s)*.52)/1 var(--f-titolo);color:var(--viola);text-shadow:.025em .025em 0 var(--crema),.05em .05em 0 var(--crema),.075em .075em 0 var(--crema),.11em .11em .05em var(--ombra)}
-.song{all:unset;align-self:flex-start;cursor:default;padding:8px 18px;border-radius:999px;background:var(--crema);font-weight:800;box-shadow:inset 0 0 0 2px var(--rosa-chiaro)}
+.head{display:flex;align-items:flex-end;gap:12px 22px;flex-wrap:wrap}
+.poster{margin:0;font:400 clamp(2.4rem,7.5vh,6rem)/1.05 var(--f-titolo);color:var(--viola);text-shadow:var(--retro)}
+.sign{display:flex;align-items:center;gap:12px;padding-bottom:.6vh}
+.by{font:700 1.4rem/1 var(--f-etichetta);letter-spacing:.14em;text-transform:uppercase}
+.app-icon{--s:52px;flex:none;width:var(--s);height:var(--s);box-sizing:border-box;padding-bottom:calc(var(--s)*.06);border-radius:calc(var(--s)*.225);background:linear-gradient(var(--rosa-chiaro),var(--rosa));display:grid;place-items:center;font:400 calc(var(--s)*.52)/1 var(--f-titolo);color:var(--viola);text-shadow:.025em .025em 0 var(--crema),.05em .05em 0 var(--crema),.075em .075em 0 var(--crema),.11em .11em .05em var(--ombra)}
+.tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.song{all:unset;cursor:default;padding:8px 18px;border-radius:999px;background:var(--crema);font-weight:800;box-shadow:inset 0 0 0 2px var(--rosa-chiaro)}
 .song b{font:400 1.1rem/1 var(--f-titolo);color:var(--rosa)}
+.pill{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border-radius:999px;background:var(--crema);color:var(--prugna);font-weight:800;font-size:.9rem;box-shadow:inset 0 0 0 2px var(--rosa-chiaro)}
 
-/* ruota-braccialetto: perline viola, quella suonata rosa */
-.wheel{position:relative;width:min(100%,260px);aspect-ratio:1;container-type:size}
+/* ruota-braccialetto: grande quanto lo spazio rimasto; perline viola, quella suonata rosa */
+.wheel-box{position:relative;flex:1;min-height:0;container-type:size}
+.wheel{position:relative;width:min(100cqw,100cqh,300px);aspect-ratio:1;container-type:size}
 .wheel::before{content:"";position:absolute;inset:15cqw;border-radius:50%;border:2px solid var(--rosa-chiaro)}
-.wheel button{all:unset;position:absolute;left:50%;top:50%;width:25cqw;height:25cqw;margin:-12.5cqw;border-radius:50%;display:grid;place-content:center;text-align:center;background:var(--perla);color:var(--crema);box-shadow:inset -3px -3px 6px rgb(43 17 69 / .3);transform:rotate(var(--a)) translateY(-35cqw) rotate(calc(-1 * var(--a)));transition:box-shadow .15s}
+.wheel button{all:unset;cursor:pointer;position:absolute;left:50%;top:50%;width:25cqw;height:25cqw;margin:-12.5cqw;border-radius:50%;display:grid;place-content:center;text-align:center;background:var(--perla);color:var(--crema);box-shadow:inset -3px -3px 6px rgb(43 17 69 / .3);transform:rotate(var(--a)) translateY(-35cqw) rotate(calc(-1 * var(--a)));transition:box-shadow .15s}
 .wheel button b{font:400 6cqw/1.25 var(--f-titolo);white-space:nowrap}
 .wheel button small{font-size:3.8cqw;font-weight:800}
 .wheel button.on{background:var(--perla-rosa);box-shadow:0 0 22px var(--rosa)}
 .wheel button.editing{box-shadow:0 0 0 4px var(--crema),0 0 0 7px var(--viola)}
 .core{position:absolute;inset:34%;display:grid;place-items:center;text-align:center;font:400 9cqw/1.1 var(--f-titolo);color:var(--rosa)}
-.hint{margin:-8px 0 0;font-size:.85rem;font-weight:700}
+.hint{margin:0;font-size:.8rem;font-weight:700}
 
-/* pannelli crema (editor della perlina, Suono della variante B) */
-.editor,.snd{display:flex;flex-direction:column;gap:12px;padding:16px 18px;border-radius:24px;background:var(--crema);box-shadow:0 0 0 2px var(--rosa-chiaro),0 18px 36px -24px var(--viola)}
+/* editor della perlina: galleggia accanto alla ruota, così non spinge giù niente */
+.editor{position:absolute;z-index:4;top:0;left:calc(min(100cqw,100cqh,300px) + 16px);width:min(340px,calc(100cqw - min(100cqw,100cqh,300px)));min-width:260px;max-height:100cqh;overflow-y:auto;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;padding:14px 16px;border-radius:24px;background:var(--crema);box-shadow:0 0 0 2px var(--rosa-chiaro),0 18px 36px -18px var(--viola)}
 .editor h2{margin:0;font-size:1rem;font-weight:800}
 .editor h2 b{font:400 1.3rem/1 var(--f-titolo);color:var(--rosa)}
-.row{display:flex;flex-direction:column;gap:6px}
+.row{display:flex;flex-direction:column;gap:5px}
 .row > span{font-size:.8rem;font-weight:800;color:var(--viola)}
-.chips{display:flex;flex-wrap:wrap;gap:6px}
-.chips button,.done{all:unset;cursor:pointer;padding:6px 12px;border-radius:999px;font-size:.85rem;font-weight:800;background:var(--confetto);color:var(--prugna);box-shadow:inset 0 0 0 2px var(--lilla)}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chips button,.done{all:unset;cursor:pointer;padding:5px 11px;border-radius:999px;font-size:.82rem;font-weight:800;background:var(--confetto);color:var(--prugna);box-shadow:inset 0 0 0 2px var(--lilla)}
 .chips button[aria-pressed="true"]{background:var(--viola);color:var(--crema);box-shadow:none}
-.done{align-self:flex-start;padding:8px 20px;background:var(--rosa);color:var(--crema);box-shadow:none}
+.done{align-self:flex-start;padding:7px 20px;background:var(--rosa);color:var(--crema);box-shadow:none}
 
-/* comuni */
-.pill{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border-radius:999px;background:var(--crema);color:var(--prugna);font-weight:800;font-size:.9rem;box-shadow:inset 0 0 0 2px var(--rosa-chiaro)}
-.pill.main{background:var(--viola);color:var(--crema);box-shadow:none}
-.tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.tiny{font-size:.8rem;font-weight:700;color:var(--prugna-tenue)}
+/* video: la polaroid prende l'altezza rimasta, il riquadro si adatta al Formato */
+.polaroid{position:relative;flex:1;min-height:0;width:100%;box-sizing:border-box;display:flex;flex-direction:column;padding:14px 14px 0;background:var(--crema);border-radius:6px;box-shadow:0 24px 50px -24px var(--ombra)}
+.polaroid::before{content:"";position:absolute;top:-12px;left:50%;width:120px;height:26px;margin-left:-60px;background:var(--rosa-chiaro);opacity:.85;transform:rotate(3deg)}
+.frame-box{flex:1;min-height:0;container-type:size;display:grid;place-items:center}
+.frame{width:min(calc(100cqw - 16px),calc((100cqh - 16px) * var(--arn)));aspect-ratio:var(--ar);border-radius:4px;overflow:hidden;outline:2px dashed var(--rosa);outline-offset:6px}
+.frame canvas{display:block;width:100%;height:100%}
+.cap{margin:0;padding:8px 0;text-align:center;font:700 1.2rem/1.1 var(--f-etichetta)}
+.dock{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-items:center}
 .seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;padding:4px;border-radius:999px;background:var(--crema);box-shadow:inset 0 0 0 2px var(--rosa-chiaro)}
-.seg button{all:unset;cursor:pointer;text-align:center;padding:10px 12px;border-radius:999px;font-weight:800;font-size:.9rem;color:var(--prugna)}
+.seg button{all:unset;cursor:pointer;text-align:center;padding:9px 12px;border-radius:999px;font-weight:800;font-size:.88rem;color:var(--prugna)}
 .seg button[aria-pressed="true"]{background:var(--viola);color:var(--crema)}
-.lbl{font-size:.8rem;font-weight:800;color:var(--viola)}
-input[type=range]{width:100%;margin:0;accent-color:var(--viola)}
-.lvrow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}
-.lvrow span{display:flex;flex-direction:column;align-items:center;padding:4px 0;border-radius:12px;background:var(--confetto);font-size:.7rem;font-weight:800;line-height:1.2}
-.lvrow b{font-size:.85rem;font-variant-numeric:tabular-nums}
-.lvrow span.on{background:var(--rosa);color:var(--crema)}
-.only{font-size:.68rem;font-weight:800;padding:2px 8px;border-radius:999px;background:var(--lilla);color:var(--prugna);white-space:nowrap}
-.reset{all:unset;cursor:pointer;align-self:flex-start;padding:8px 16px;border-radius:999px;font-weight:800;font-size:.85rem;color:var(--viola);box-shadow:inset 0 0 0 2px var(--viola)}
+.rec{all:unset;cursor:pointer;display:flex;align-items:center;gap:10px;padding:13px 22px;border-radius:999px;background:var(--rosa);color:var(--crema);font-weight:800;font-size:1.05rem;box-shadow:0 12px 30px -12px var(--rosa)}
+.rec::before{content:"";width:13px;height:13px;border-radius:50%;background:var(--crema)}
 
-/* interruttori delle Impostazioni video */
+/* banco del Suono */
+.desk{padding:10px 24px 14px;background:var(--prugna);color:var(--crema);border-top:3px dashed var(--rosa-chiaro)}
+.desk-head{display:flex;align-items:center;gap:10px 14px}
+.desk-head h3{margin:0;font:400 1.45rem/1 var(--f-titolo);color:var(--rosa-chiaro)}
+.lcd{flex:1;min-width:0;margin:0;padding:6px 14px;border-radius:12px;background:var(--notte);color:var(--confetto);font-size:.8rem;line-height:1.35;height:calc(2 * 1.35em);overflow:hidden;display:flex;align-items:center}
+.pill.dark{background:transparent;color:var(--crema);box-shadow:inset 0 0 0 2px var(--rosa-chiaro);padding:7px 16px}
+.guide{all:unset;cursor:pointer;flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--viola);color:var(--crema);font:400 1.3rem/1 var(--f-titolo);box-shadow:0 0 0 2px var(--rosa-chiaro)}
+.desk-body{display:flex;flex-wrap:wrap;gap:12px 26px;margin-top:10px;align-items:flex-start}
+.grp{display:flex;flex-direction:column;gap:6px}
+.grp > span{font:700 1.05rem/1 var(--f-etichetta);letter-spacing:.14em;text-transform:uppercase;color:var(--rosa-chiaro)}
+.grp > div{display:flex;gap:6px}
+.knob{display:flex;flex-direction:column;align-items:center;gap:3px;width:74px;text-align:center;cursor:ns-resize;touch-action:none;user-select:none;border-radius:12px}
+.dial{--p:.5;position:relative;width:52px;height:52px;border-radius:50%;background:conic-gradient(from 225deg,var(--rosa) calc(var(--p) * 270deg),rgb(255 240 217 / .15) 0 270deg,transparent 0)}
+.dial::before{content:"";position:absolute;inset:6px;border-radius:50%;background:var(--perla);box-shadow:inset -3px -3px 6px rgb(26 10 43 / .4)}
+.dial::after{content:"";position:absolute;left:50%;top:50%;width:3px;height:17px;margin:-17px 0 0 -1.5px;border-radius:2px;background:var(--crema);transform-origin:50% 100%;transform:rotate(calc(-135deg + var(--p) * 270deg))}
+.knob b{font-size:.72rem;font-weight:800;line-height:1.2}
+.knob output{font-size:.72rem;color:var(--confetto);font-variant-numeric:tabular-nums}
+.knob.off{opacity:.35}
+.effknob{display:flex;align-items:center;gap:10px}
+.effknob .dial{all:unset;cursor:pointer;--p:.5;position:relative;width:64px;height:64px;border-radius:50%;background:rgb(255 240 217 / .15)}
+.effknob .dial::before{content:"";position:absolute;inset:5px;border-radius:50%;background:var(--perla-rosa)}
+.effknob .dial::after{content:"";position:absolute;left:50%;top:50%;width:4px;height:22px;margin:-22px 0 0 -2px;border-radius:2px;background:var(--crema);transform-origin:50% 100%;transform:rotate(calc(-135deg + var(--p) * 270deg))}
+.effnames{display:flex;flex-direction:column;gap:3px}
+.effnames button{all:unset;cursor:pointer;font-weight:800;font-size:.85rem;color:rgb(255 240 217 / .55)}
+.effnames button[aria-pressed="true"]{color:var(--rosa-chiaro)}
+
+/* pannello laterale (Impostazioni, Guida) */
+.scrim{position:absolute;inset:0;z-index:5;background:rgb(26 10 43 / .35)}
+.sheet{position:absolute;top:0;right:0;bottom:0;z-index:6;width:min(440px,100%);box-sizing:border-box;overflow-y:auto;display:flex;flex-direction:column;gap:16px;padding:22px 22px 28px;background:var(--crema);color:var(--prugna);box-shadow:-20px 0 50px -20px var(--ombra)}
+.sheet h2{margin:0;padding-right:40px;font:400 1.9rem/1.1 var(--f-titolo);color:var(--viola)}
+.x{all:unset;cursor:pointer;position:absolute;top:16px;right:16px;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--confetto);font-weight:800;font-size:1.2rem}
+.lbl{font-size:.8rem;font-weight:800;color:var(--viola);margin:0}
+.ctx{margin:0;font-size:.85rem}
+.gl{margin:0;display:grid;gap:4px 0}
+.gl dt{font-weight:800;color:var(--viola);margin-top:8px}
+.gl dd{margin:0;font-size:.88rem}
+.only{font-size:.68rem;font-weight:800;padding:2px 8px;border-radius:999px;background:var(--lilla);color:var(--prugna);white-space:nowrap}
 .vset{display:flex;flex-direction:column;gap:14px}
 .vrow{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:.9rem;font-weight:800}
 .vrow b{font-weight:700;color:var(--prugna-tenue)}
@@ -103,130 +132,47 @@ input[type=range]{width:100%;margin:0;accent-color:var(--viola)}
 .switch[aria-checked="true"] .track::after{transform:translateX(18px);background:var(--crema)}
 #titolo{width:11rem;max-width:100%;padding:6px 12px;border:0;border-radius:999px;background:var(--confetto);color:var(--prugna);font:400 1rem/1.3 var(--f-titolo);box-shadow:inset 0 0 0 2px var(--rosa-chiaro)}
 
-/* pannello laterale (Impostazioni, Guida) */
-.scrim{position:absolute;inset:0;z-index:5;background:rgb(26 10 43 / .35)}
-.sheet{position:absolute;top:0;right:0;bottom:0;z-index:6;width:min(440px,100%);box-sizing:border-box;overflow-y:auto;display:flex;flex-direction:column;gap:16px;padding:22px 22px 28px;background:var(--crema);color:var(--prugna);box-shadow:-20px 0 50px -20px var(--ombra)}
-.sheet h2{margin:0;padding-right:40px;font:400 1.9rem/1.1 var(--f-titolo);color:var(--viola)}
-.x{all:unset;cursor:pointer;position:absolute;top:16px;right:16px;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--confetto);font-weight:800;font-size:1.2rem}
-.ctx,.note{margin:0;font-size:.85rem}
-.list{display:flex;flex-direction:column;gap:3px;border-radius:20px;overflow:hidden}
-.item{display:flex;flex-direction:column;gap:7px;padding:12px 14px;background:var(--confetto)}
-.item .top,.kn .top{display:flex;align-items:center;gap:8px;font-weight:800;font-size:.9rem}
-.item output,.kn output{margin-left:auto;color:var(--viola);font-variant-numeric:tabular-nums;text-align:right}
-.item p{margin:0;font-size:.8rem;color:var(--prugna-tenue)}
-.gl{margin:0;display:grid;gap:4px 0}
-.gl dt{font-weight:800;color:var(--viola);margin-top:8px}
-.gl dd{margin:0;font-size:.88rem}
-
-/* B: Suono sempre in vista sul poster */
-.snd-head{display:flex;align-items:center;gap:12px}
-.snd h3{margin:0;font:400 1.7rem/1 var(--f-titolo);color:var(--viola)}
-.snd-head .reset{margin-left:auto}
-.effs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.eff{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 6px;border-radius:20px;text-align:center}
-.eff i{width:44px;height:44px;border-radius:50%;background:var(--perla);box-shadow:inset -3px -3px 6px rgb(43 17 69 / .3)}
-.eff b{font:400 1.2rem/1 var(--f-titolo);color:var(--viola)}
-.eff small{font-size:.72rem;font-weight:700;line-height:1.25}
-.eff[aria-pressed="true"]{background:var(--confetto)}
-.eff[aria-pressed="true"] i{background:var(--perla-rosa);box-shadow:0 0 18px var(--rosa)}
-.kn{display:flex;flex-direction:column;gap:6px}
-.kn.off{opacity:.45}
-.q{all:unset;cursor:pointer;flex:none;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:.72rem;font-weight:800;background:var(--lilla);color:var(--prugna)}
-.tip{margin:0;padding:8px 12px;border-radius:14px;background:var(--confetto);font-size:.8rem}
-.more{all:unset;cursor:pointer;align-self:flex-start;font-weight:800;font-size:.9rem;color:var(--viola);text-decoration:underline;text-underline-offset:4px}
-.bracelet{-webkit-appearance:none;appearance:none;height:24px;background:radial-gradient(circle,var(--lilla) 3px,transparent 3.5px) 0 50%/14px 14px repeat-x,linear-gradient(var(--rosa-chiaro),var(--rosa-chiaro)) 0 50%/100% 2px no-repeat}
-.bracelet::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:var(--perla-rosa);border:2px solid var(--crema);box-shadow:0 0 10px var(--rosa)}
-.bracelet::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--perla-rosa);border:2px solid var(--crema);box-shadow:0 0 10px var(--rosa)}
-
-/* C: banco del Suono, a tutta larghezza sotto la finestra */
-.desk{padding:14px 24px 22px;background:var(--prugna);color:var(--crema);border-top:3px dashed var(--rosa-chiaro)}
-.desk-head{display:flex;align-items:center;gap:12px 16px;flex-wrap:wrap}
-.desk-head h3{margin:0;font:400 1.6rem/1 var(--f-titolo);color:var(--rosa-chiaro)}
-.lcd{flex:1 1 280px;min-width:0;margin:0;padding:8px 14px;border-radius:12px;background:var(--notte);color:var(--confetto);font-size:.82rem;min-height:2.6em;display:flex;align-items:center}
-.pill.dark{background:transparent;color:var(--crema);box-shadow:inset 0 0 0 2px var(--rosa-chiaro)}
-.desk-body{display:flex;flex-wrap:wrap;gap:18px 30px;margin-top:16px;align-items:flex-start}
-.grp{display:flex;flex-direction:column;gap:10px}
-.grp > span{font:700 1.2rem/1 var(--f-etichetta);letter-spacing:.14em;text-transform:uppercase;color:var(--rosa-chiaro)}
-.grp > div{display:flex;gap:10px}
-.grp .lvrow span{background:var(--prugna-2);color:var(--crema)}
-.grp .lvrow span.on{background:var(--rosa)}
-.knob{display:flex;flex-direction:column;align-items:center;gap:5px;width:78px;text-align:center;cursor:ns-resize;touch-action:none;user-select:none;border-radius:12px}
-.dial{--p:.5;position:relative;width:58px;height:58px;border-radius:50%;background:conic-gradient(from 225deg,var(--rosa) calc(var(--p) * 270deg),rgb(255 240 217 / .15) 0 270deg,transparent 0)}
-.dial::before{content:"";position:absolute;inset:7px;border-radius:50%;background:var(--perla);box-shadow:inset -3px -3px 6px rgb(26 10 43 / .4)}
-.dial::after{content:"";position:absolute;left:50%;top:50%;width:3px;height:19px;margin:-19px 0 0 -1.5px;border-radius:2px;background:var(--crema);transform-origin:50% 100%;transform:rotate(calc(-135deg + var(--p) * 270deg))}
-.knob b{font-size:.72rem;font-weight:800;line-height:1.2}
-.knob output{font-size:.72rem;color:var(--confetto);font-variant-numeric:tabular-nums}
-.knob.off{opacity:.35}
-.knob .only{font-size:.6rem;white-space:normal;line-height:1.2;text-align:center}
-.effknob{display:flex;align-items:center;gap:12px}
-.effknob .dial{all:unset;cursor:pointer;--p:.5;position:relative;width:72px;height:72px;border-radius:50%;background:rgb(255 240 217 / .15)}
-.effknob .dial::before{content:"";position:absolute;inset:6px;border-radius:50%;background:var(--perla-rosa)}
-.effknob .dial::after{content:"";position:absolute;left:50%;top:50%;width:4px;height:24px;margin:-24px 0 0 -2px;border-radius:2px;background:var(--crema);transform-origin:50% 100%;transform:rotate(calc(-135deg + var(--p) * 270deg))}
-.effnames{display:flex;flex-direction:column;gap:4px}
-.effnames button{all:unset;cursor:pointer;font-weight:800;font-size:.85rem;color:rgb(255 240 217 / .55)}
-.effnames button[aria-pressed="true"]{color:var(--rosa-chiaro)}
-
-/* video */
-.polaroid{position:relative;width:100%;box-sizing:border-box;padding:16px 16px 0;background:var(--crema);border-radius:6px;box-shadow:0 24px 50px -24px var(--ombra)}
-.polaroid::before{content:"";position:absolute;top:-14px;left:50%;width:120px;height:30px;margin-left:-60px;background:var(--rosa-chiaro);opacity:.85;transform:rotate(3deg)}
-.frame{position:relative;aspect-ratio:var(--ar);width:min(100%,calc(52vh * var(--arn)));max-width:100%;margin-inline:auto;border-radius:4px;overflow:hidden;outline:2px dashed var(--rosa);outline-offset:6px}
-.frame canvas{display:block;width:100%;height:100%}
-.cap{margin:0;padding:14px 0 12px;text-align:center;font:700 1.4rem/1.1 var(--f-etichetta)}
-.dock{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;align-items:center}
-.rec{all:unset;cursor:pointer;display:flex;align-items:center;gap:10px;padding:16px 22px;border-radius:999px;background:var(--rosa);color:var(--crema);font-weight:800;font-size:1.1rem;box-shadow:0 12px 30px -12px var(--rosa)}
-.rec::before{content:"";width:14px;height:14px;border-radius:50%;background:var(--crema)}
-.guide{all:unset;cursor:pointer;position:absolute;right:20px;bottom:20px;z-index:4;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:var(--viola);color:var(--crema);font:400 1.5rem/1 var(--f-titolo);box-shadow:0 10px 24px -10px var(--viola)}
-
-/* barra del prototipo: non fa parte del design */
-.proto-bar{position:fixed;left:50%;bottom:0;z-index:20;transform:translateX(-50%);margin-bottom:calc(14px + env(safe-area-inset-bottom, 0px));display:flex;align-items:center;gap:6px;padding:6px;border-radius:999px;background:#111;color:#fff;font:600 13px/1 ui-monospace,Menlo,monospace;box-shadow:0 10px 30px rgb(0 0 0 / .5);white-space:nowrap;max-width:calc(100vw - 32px)}
-.proto-bar button{all:unset;cursor:pointer;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:#333;font-size:16px}
-.proto-bar span{padding:0 10px;overflow:hidden;text-overflow:ellipsis}
-@media (max-width:820px){.body{grid-template-columns:1fr;padding:20px}}
+/* finestra stretta (non è il Mac di Keopees): si impila e scorre */
+@media (max-width:820px){.app{height:auto;min-height:100dvh}.main{grid-template-columns:1fr}.wheel-box,.polaroid{flex:none;height:60vh}}
 @media (prefers-reduced-motion:reduce){.track,.track::after,.wheel button{transition:none}}
 </style>
 
-<p class="intro"><b>Pannello del Suono, prototipo.</b> Tre posti diversi per l'Effetto e le manopole del Suono: cambia variante con la barra nera in basso (o con ← →). Prova a cambiare Effetto e a muovere le manopole. Camera simulata, nessun suono.</p>
-
-<section class="win">
-  <div class="titlebar"><i></i><i></i><i></i></div>
-  <div class="body">
+<div class="app">
+  <main class="main">
     <div class="left">
-      <p class="poster">Live<br>Vocoder</p>
-      <div class="sign"><div class="app-icon">K</div><span class="by">by Keopees</span></div>
-      <button class="song" title="Menu Canzone (non attivo nel prototipo)">Canzone: <b>Ma Lei</b> ▾</button>
-      <div class="wheel" id="wheel"><div class="core" data-bind="chord">Lam</div></div>
-      <p class="hint">Tocca una perlina per cambiare accordo e ottava.</p>
-
-      <div class="editor" id="editor" hidden>
-        <h2>Perlina da <span data-bind="edDita"></span>: <b data-bind="edName"></b></h2>
-        <div class="row"><span>Nota</span><div class="chips" id="chips-root"></div></div>
-        <div class="row"><span>Tipo</span><div class="chips" id="chips-type"></div></div>
-        <div class="row"><span>Ottava</span><div class="chips" id="chips-oct"></div></div>
-        <button class="done" data-act="done">Fatto</button>
+      <div class="head">
+        <p class="poster">Live<br>Vocoder</p>
+        <div class="sign"><div class="app-icon">K</div><span class="by">by Keopees</span></div>
       </div>
-
-      <div id="slot-left" class="left"></div>
+      <div class="tools">
+        <button class="song" title="Menu Canzone (non attivo nel prototipo)">Canzone: <b>Ma Lei</b> ▾</button>
+        <button class="pill" data-act="panel" data-val="imp">Impostazioni</button>
+      </div>
+      <div class="wheel-box">
+        <div class="wheel" id="wheel"><div class="core" data-bind="chord">Lam</div></div>
+        <div class="editor" id="editor" hidden>
+          <h2>Perlina da <span data-bind="edDita"></span>: <b data-bind="edName"></b></h2>
+          <div class="row"><span>Nota</span><div class="chips" id="chips-root"></div></div>
+          <div class="row"><span>Tipo</span><div class="chips" id="chips-type"></div></div>
+          <div class="row"><span>Ottava</span><div class="chips" id="chips-oct"></div></div>
+          <button class="done" data-act="done">Fatto</button>
+        </div>
+      </div>
+      <p class="hint">Tocca una perlina per cambiare accordo e ottava.</p>
     </div>
 
     <div class="right">
-      <div class="polaroid"><div class="frame"><canvas></canvas></div><p class="cap">questo finisce nel video ♥</p></div>
+      <div class="polaroid"><div class="frame-box"><div class="frame"><canvas></canvas></div></div><p class="cap">questo finisce nel video ♥</p></div>
       <div class="dock">
         <div class="seg" role="group" aria-label="Modalità"><button data-act="mode" data-val="accordi">Accordi</button><button data-act="mode" data-val="nota">Nota singola</button></div>
         <div class="seg" role="group" aria-label="Formato"><button data-act="format" data-val="verticale">Verticale</button><button data-act="format" data-val="orizzontale">Orizzontale</button></div>
         <button class="rec" data-act="rec">Registra 00:00</button>
       </div>
     </div>
-
-    <button class="guide" data-act="panel" data-val="guida" aria-label="Guida">?</button>
-    <div id="slot-sheet"></div>
-  </div>
-  <div id="slot-bottom"></div>
-</section>
-<p class="state" data-state></p>
-
-<nav class="proto-bar" aria-label="Varianti del prototipo">
-  <button data-act="prev" aria-label="Variante precedente">‹</button><span data-bind="vlabel"></span><button data-act="next" aria-label="Variante successiva">›</button>
-</nav>
+  </main>
+  <section class="desk" id="desk" aria-label="Suono"></section>
+  <div id="slot-sheet"></div>
+</div>
 
 <script>
 const NOTE = ['Do','Do♯','Re','Mi♭','Mi','Fa','Fa♯','Sol','La♭','La','Si♭','Si'];
@@ -249,21 +195,21 @@ const KN = [
    help:'Quanto Effetto senti, rispetto alla tua voce pulita, quando alzi 1 dito della seconda mano. Con Spento è quanto forte suonano gli accordi.'},
   {k:'i5', name:'Intensità con 5 dita', cname:'Con 5 dita', vals:steps(0,100,5), def:90, fmt:pct, for:ALL,
    help:'Come sopra, ma con 5 dita alzate. Tra 1 e 5 dita l\'Effetto cresce un po\' alla volta.'},
-  {k:'voci', name:'Note dell\'accordo', cname:'Note', vals:[3,4,5], def:4, chip:v => v + ' note', short:v => v,
+  {k:'voci', name:'Note dell\'accordo', cname:'Note', vals:[3,4,5], def:4, short:v => v,
    fmt:v => ({3:'3', 4:'4, col basso', 5:'5, col basso e una in alto'})[v], for:ALL,
    help:'Quante note suonano insieme. Con 4 si aggiunge il basso, con 5 anche una nota più alta.'},
+  {k:'scivola', name:'Scivolata', vals:steps(0,400,20), def:0, fmt:v => v ? it(v / 1000) + ' s' : 'niente', for:ALL,
+   help:'Quando cambi perlina le note scivolano verso il nuovo accordo invece di saltare. Niente = salto netto.'},
   {k:'timbro', name:'Timbro', vals:['sega','supersaw','quadra'], def:'supersaw',
    fmt:v => ({sega:'Sega', supersaw:'Supersaw', quadra:'Quadra'})[v], for:['vocoder','spento'],
    help:'Il colore del synth. Sega graffia, Supersaw è largo e pieno (il suono pop), Quadra è più vuoto, da videogioco.'},
-  {k:'bande', name:'Dettaglio', vals:[8,12,16,24,32], def:24, chip:v => v, short:v => v + ' fette',
+  {k:'bande', name:'Dettaglio', vals:[8,12,16,24,32], def:24, short:v => v + ' fette',
    fmt:v => `${v} fette, ${({8:'tanto robot', 12:'robot', 16:'a metà', 24:'parole chiare', 32:'chiarissime'})[v]}`, for:['vocoder'],
    help:'In quante fette il Vocoder taglia la tua voce. Poche fette = più robot, tante = le parole si capiscono meglio.'},
-  {k:'cons', name:'Consonanti chiare', cname:'Consonanti', vals:steps(0,100,5), def:15, fmt:pct, for:['coro','vocoder'],
-   help:'Fa passare le S, le T e il fiato della tua voce vera, così le parole si capiscono anche con tanto Effetto.'},
   {k:'morb', name:'Morbidezza', vals:steps(0,100,5), def:0, fmt:pct, for:['vocoder','spento'],
    help:'Rende il synth più scuro e più dolce, e un po\' più lento a seguire la voce.'},
-  {k:'scivola', name:'Scivolata', vals:steps(0,400,20), def:0, fmt:v => v ? it(v / 1000) + ' s' : 'niente', for:ALL,
-   help:'Quando cambi perlina le note scivolano verso il nuovo accordo invece di saltare. Niente = salto netto.'},
+  {k:'cons', name:'Consonanti chiare', cname:'Consonanti', vals:steps(0,100,5), def:15, fmt:pct, for:['coro','vocoder'],
+   help:'Fa passare le S, le T e il fiato della tua voce vera, così le parole si capiscono anche con tanto Effetto.'},
   {k:'gate', name:'Anti-fruscio', vals:steps(-75,-30,5), def:-75, short:v => v <= -75 ? 'spento' : it(v) + ' dB',
    fmt:v => v <= -75 ? 'spento' : `${v <= -60 ? 'leggero' : v <= -45 ? 'medio' : 'forte'} (${it(v)} dB)`, for:ALL,
    help:'Chiude il microfono quando non canti, così non si sentono fruscii e rumori di casa. Più forte taglia di più, ma può mangiare i finali delle frasi.'},
@@ -271,14 +217,14 @@ const KN = [
    help:'Quanto forte ti senti in cuffia mentre canti. Non cambia il volume della Registrazione.'},
 ];
 const KM = Object.fromEntries(KN.map(K => [K.k, K]));
+const GROUPS = [['Mano', ['i1','i5']], ['Accordo', ['voci','scivola']], ['Synth', ['timbro','bande','morb']], ['Voce', ['cons','gate']], ['Cuffia', ['vol']]];
 
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
-const pad = n => String(Math.floor(n)).padStart(2, '0');
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const st = {mode:'accordi', format:'verticale', i:1, edit:-1, lv:3, eff:'coro',
             titolo:true, filtro:true, specchio:true, conto:true, title:'Ma Lei', mano:'sinistra',
             snd:Object.fromEntries(KN.map(K => [K.k, K.def])),
-            ui:{panel:null, tab:'suono', more:false, tip:null, desk:true}};
+            ui:{panel:null, desk:true}};
 
 const idx = k => KM[k].vals.indexOf(st.snd[k]);
 const setIdx = (k, i) => { const v = KM[k].vals; st.snd[k] = v[Math.max(0, Math.min(v.length - 1, i))]; };
@@ -287,13 +233,6 @@ const applies = K => K.for.includes(st.eff);
 const onlyLabel = K => 'solo ' + K.for.map(e => EFF[e].name).join(' e ');
 const lvPct = n => Math.round(st.snd.i1 + (st.snd.i5 - st.snd.i1) * (n - 1) / 4);
 
-// --- pezzi condivisi tra le varianti (solo controlli, non il layout)
-const lvRow = () => `<div class="lvrow" aria-label="Intensità per dita alzate">${[1,2,3,4,5].map(n => `<span data-lv="${n}">${n} ${n > 1 ? 'dita' : 'dito'}<b></b></span>`).join('')}</div>`;
-const rangeCtl = (K, cls = '') => `<input type="range" class="${cls}" id="r-${K.k}" data-knob="${K.k}" min="0" max="${K.vals.length - 1}" step="1" aria-label="${K.name}">`;
-const chipsCtl = K => `<div class="chips" role="group" aria-label="${K.name}">${K.vals.map((v, i) => `<button data-act="set" data-k="${K.k}" data-i="${i}">${(K.chip || K.fmt)(v)}</button>`).join('')}</div>`;
-const control = (K, cls) => K.vals.length <= 5 ? chipsCtl(K) : rangeCtl(K, cls);
-const effSeg = () => `<div class="seg" role="group" aria-label="Effetto">${EKEYS.map(v => `<button data-act="eff" data-val="${v}">${EFF[v].name}</button>`).join('')}</div>`;
-const resetBtn = (label = 'Rimetti il Suono di partenza') => `<button class="reset" data-act="reset" title="Effetto escluso: resta quello scelto">${label}</button>`;
 const sw = (k, label) => `<button class="switch" role="switch" data-act="sw" data-val="${k}"><span class="track"></span>${label}</button>`;
 const videoSet = () => `<div class="vset">
   <div class="vrow">${sw('titolo', 'Titolo nel video')}<input id="titolo" type="text" value="${st.title}" maxlength="40" aria-label="Titolo accanto all'accordo"></div>
@@ -306,66 +245,17 @@ const guideSheet = () => `<h2>Guida</h2><p class="lbl">IL SUONO</p>
   <p class="ctx">L'Effetto è cosa succede alla tua voce. Le manopole lo regolano e si salvano nella Canzone.</p>
   <dl class="gl">${EKEYS.map(e => `<dt>${EFF[e].name}</dt><dd>${EFF[e].sub}</dd>`).join('')}
   ${KN.map(K => `<dt>${K.name}</dt><dd>${K.help}${K.for.length < 3 ? ` <span class="only">${onlyLabel(K)}</span>` : ''}</dd>`).join('')}</dl>`;
-
-// --- le tre varianti: ognuna decide dove vanno Effetto e manopole
-const V = {
-  A: {
-    label: 'Cassetto: tutto in Impostazioni',
-    left: () => `<div class="row"><span class="lbl">Effetto</span>${effSeg()}<p class="ctx" data-sub></p></div>
-      <div class="tools"><button class="pill main" data-act="panel" data-val="imp">Impostazioni</button><span class="tiny">Suono, video e cartella</span></div>`,
-    sheet: () => {
-      const hid = KN.filter(K => !applies(K)).map(K => K.name);
-      const tabs = `<div class="seg" role="group" aria-label="Sezione"><button data-act="tab" data-val="suono">Suono</button><button data-act="tab" data-val="video">Video e cartella</button></div>`;
-      if (st.ui.tab === 'video') return `<h2>Impostazioni</h2>${tabs}${videoSet()}`;
-      return `<h2>Impostazioni</h2>${tabs}
-        <p class="ctx">Effetto: <b>${EFF[st.eff].name}</b>. Lo cambi sotto la ruota.</p>
-        <div class="list">${KN.filter(applies).map(K => `<div class="item">
-          <div class="top"><span>${K.name}</span><output data-show="${K.k}"></output></div>
-          ${control(K)}<p>${K.help}</p>${K.k === 'i5' ? lvRow() : ''}</div>`).join('')}</div>
-        ${hid.length ? `<p class="note">Con gli altri Effetti compaiono anche: ${hid.join(', ')}.</p>` : ''}
-        ${resetBtn()}`;
-    },
-  },
-  B: {
-    label: 'Sul poster: Suono sempre in vista',
-    left: () => {
-      const prim = ['i1','i5','voci','vol'], rest = KN.filter(K => !prim.includes(K.k));
-      const kn = K => `<div class="kn${applies(K) ? '' : ' off'}">
-        <div class="top"><span>${K.name}</span><button class="q" data-act="tip" data-val="${K.k}" aria-label="Cosa fa ${K.name}?">?</button>${applies(K) ? '' : `<span class="only">${onlyLabel(K)}</span>`}<output data-show="${K.k}"></output></div>
-        ${control(K, 'bracelet')}${st.ui.tip === K.k ? `<p class="tip">${K.help}</p>` : ''}${K.k === 'i5' ? lvRow() : ''}</div>`;
-      return `<div class="tools"><button class="pill" data-act="panel" data-val="imp">Impostazioni</button><span class="tiny">video e cartella</span></div>
-        <section class="snd" aria-label="Suono">
-          <div class="snd-head"><h3>Suono</h3>${resetBtn('♡ Di partenza')}</div>
-          <div class="effs" role="group" aria-label="Effetto">${EKEYS.map(e => `<button class="eff" data-act="eff" data-val="${e}"><i></i><b>${EFF[e].name}</b><small>${EFF[e].sub}</small></button>`).join('')}</div>
-          ${KN.filter(K => prim.includes(K.k)).map(kn).join('')}
-          <button class="more" data-act="more">${st.ui.more ? 'Meno manopole' : `Altre ${rest.length} manopole`}</button>
-          ${st.ui.more ? rest.map(kn).join('') : ''}
-        </section>`;
-    },
-    sheet: () => `<h2>Impostazioni</h2>${videoSet()}`,
-  },
-  C: {
-    label: 'Banco: manopole in fondo',
-    left: () => `<div class="row"><span class="lbl">Effetto</span><p class="ctx"><b data-effname></b>, si cambia dal banco del Suono qui sotto.</p></div>
-      <div class="tools"><button class="pill" data-act="panel" data-val="imp">Impostazioni</button><span class="tiny">video e cartella</span></div>`,
-    bottom: () => {
-      const GROUPS = [['Mano', ['i1','i5']], ['Accordo', ['voci','scivola']], ['Synth', ['timbro','bande','morb']], ['Voce', ['cons','gate']], ['Cuffia', ['vol']]];
-      const knob = K => `<div class="knob${applies(K) ? '' : ' off'}" data-knob="${K.k}" data-help="${K.k}" role="slider" tabindex="0" aria-label="${K.name}" aria-valuemin="0" aria-valuemax="${K.vals.length - 1}">
-        <div class="dial"></div><b>${K.cname || K.name}</b><output data-show-short="${K.k}"></output>${applies(K) ? '' : `<span class="only">${onlyLabel(K)}</span>`}</div>`;
-      return `<section class="desk" aria-label="Suono">
-        <div class="desk-head"><h3>Suono</h3><p class="lcd" data-lcd></p>${resetBtn('Di partenza').replace('class="reset"', 'class="pill dark"')}<button class="pill dark" data-act="desk">${st.ui.desk ? 'Nascondi' : 'Mostra'}</button></div>
-        ${st.ui.desk ? `<div class="desk-body">
-          <div class="grp"><span>Effetto</span><div class="effknob"><button class="dial" data-act="effcycle" aria-label="Cambia Effetto"></button>
-            <div class="effnames">${EKEYS.map(e => `<button data-act="eff" data-val="${e}">${EFF[e].name}</button>`).join('')}</div></div></div>
-          ${GROUPS.map(([g, ks]) => `<div class="grp"><span>${g}</span><div>${ks.map(k => knob(KM[k])).join('')}</div>${g === 'Mano' ? lvRow() : ''}</div>`).join('')}
-        </div>` : ''}
-      </section>`;
-    },
-    sheet: () => `<h2>Impostazioni</h2>${videoSet()}`,
-  },
-};
-const VK = Object.keys(V);
-let cur = VK.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'A';
+const knob = K => `<div class="knob${applies(K) ? '' : ' off'}" data-knob="${K.k}" data-help="${K.k}" role="slider" tabindex="0" aria-label="${K.name}" aria-valuemin="0" aria-valuemax="${K.vals.length - 1}">
+  <div class="dial"></div><b>${K.cname || K.name}</b><output data-show="${K.k}"></output></div>`;
+const desk = () => `<div class="desk-head"><h3>Suono</h3><p class="lcd" data-lcd></p>
+    <button class="pill dark" data-act="reset" title="L'Effetto resta quello scelto">Di partenza</button>
+    <button class="pill dark" data-act="desk">${st.ui.desk ? 'Nascondi' : 'Mostra'}</button>
+    <button class="guide" data-act="panel" data-val="guida" aria-label="Guida">?</button></div>
+  ${st.ui.desk ? `<div class="desk-body">
+    <div class="grp"><span>Effetto</span><div class="effknob"><button class="dial" data-act="effcycle" aria-label="Cambia Effetto"></button>
+      <div class="effnames">${EKEYS.map(e => `<button data-act="eff" data-val="${e}" data-help="eff:${e}">${EFF[e].name}</button>`).join('')}</div></div></div>
+    ${GROUPS.map(([g, ks]) => `<div class="grp"><span>${g}</span><div>${ks.map(k => knob(KM[k])).join('')}</div></div>`).join('')}
+  </div>` : ''}`;
 const LCD = 'Passa sopra una manopola per sapere cosa fa. Trascina in su o in giù per girarla, doppio clic per il valore di partenza.';
 
 $('#wheel').insertAdjacentHTML('beforeend', beads.map((_, i) =>
@@ -379,23 +269,21 @@ const freqs = b => (st.mode === 'accordi' ? TYPES[b.t].iv : [0]).map(iv => 261.6
 const dita = i => `${i + 1} ${i ? 'dita' : 'dito'}`;
 const octMark = o => o < 0 ? ' ↓' : o > 0 ? ' ↑' : '';
 
-// Ricostruisce i posti che cambiano per variante, poi aggiorna i valori (sync).
+// Ricostruisce banco e pannello laterale, poi aggiorna il resto.
 function build() {
-  const v = V[cur], u = st.ui;
-  $('#slot-left').innerHTML = v.left();
-  $('#slot-bottom').innerHTML = v.bottom ? v.bottom() : '';
+  const u = st.ui;
+  $('#desk').innerHTML = desk();
   $('#slot-sheet').innerHTML = u.panel ? `<div class="scrim" data-act="close"></div><aside class="sheet" role="dialog" aria-label="${u.panel === 'guida' ? 'Guida' : 'Impostazioni'}">
-    <button class="x" data-act="close" aria-label="Chiudi">×</button>${u.panel === 'guida' ? guideSheet() : v.sheet()}</aside>` : '';
+    <button class="x" data-act="close" aria-label="Chiudi">×</button>${u.panel === 'guida' ? guideSheet() : `<h2>Impostazioni</h2>${videoSet()}`}</aside>` : '';
+  setLcd();
   paint();
 }
 
-// Ruota, editor della perlina e interruttori: cambiano anche da soli (perline simulate), senza ricostruire i pannelli.
+// Ruota, editor della perlina e interruttori: cambiano anche da soli (perline simulate), senza ricostruire il banco.
 function paint() {
-  const v = V[cur];
   document.documentElement.dataset.format = st.format;
-  const cur_ = beads[st.i], ed = beads[st.edit];
-  const bind = {chord: name(cur_), edDita: ed ? dita(st.edit) : '', edName: ed ? NOTE[ed.r] + TYPES[ed.t].suf + octMark(ed.o) : '',
-                vlabel: `${cur} · ${v.label}`};
+  const ed = beads[st.edit];
+  const bind = {chord: name(beads[st.i]), edDita: ed ? dita(st.edit) : '', edName: ed ? NOTE[ed.r] + TYPES[ed.t].suf + octMark(ed.o) : ''};
   for (const [k, val] of Object.entries(bind)) $$(`[data-bind="${k}"]`).forEach(el => el.textContent = val);
   $$('[data-act="bead"]').forEach((b, i) => {
     b.querySelector('b').textContent = name(beads[i]);
@@ -405,45 +293,39 @@ function paint() {
   });
   $('#editor').hidden = !ed;
   const pressed = (act, val) => $$(`[data-act="${act}"]`).forEach(b => b.setAttribute('aria-pressed', b.dataset.val === String(val)));
-  pressed('mode', st.mode); pressed('format', st.format); pressed('mano', st.mano); pressed('tab', st.ui.tab);
+  pressed('mode', st.mode); pressed('format', st.format); pressed('mano', st.mano);
   if (ed) { pressed('root', ed.r); pressed('type', ed.t); pressed('oct', ed.o); }
   $$('[data-act="sw"]').forEach(b => b.setAttribute('aria-checked', st[b.dataset.val]));
   const t = $('#titolo'); if (t) t.hidden = !st.titolo;
-  setLcd();
   sync();
 }
 
-// Aggiorna valori e stato senza ricostruire (così uno slider trascinato non perde la presa).
+// Aggiorna le manopole senza ricostruire (così una manopola trascinata non perde la presa).
 function sync() {
-  $$('input[data-knob]').forEach(r => r.value = idx(r.dataset.knob));
-  $$('[data-show]').forEach(o => o.textContent = KM[o.dataset.show].fmt(st.snd[o.dataset.show]));
-  $$('[data-show-short]').forEach(o => { const K = KM[o.dataset.showShort]; o.textContent = (K.short || K.fmt)(st.snd[K.k]); });
+  $$('[data-show]').forEach(o => { const K = KM[o.dataset.show]; o.textContent = (K.short || K.fmt)(st.snd[K.k]); });
   $$('.knob[data-knob]').forEach(kn => {
     const K = KM[kn.dataset.knob], i = idx(K.k);
     kn.querySelector('.dial').style.setProperty('--p', i / (K.vals.length - 1));
     kn.setAttribute('aria-valuenow', i); kn.setAttribute('aria-valuetext', K.fmt(st.snd[K.k]));
   });
-  $$('[data-act="set"]').forEach(b => b.setAttribute('aria-pressed', +b.dataset.i === idx(b.dataset.k)));
   $$('[data-act="eff"]').forEach(b => b.setAttribute('aria-pressed', b.dataset.val === st.eff));
-  $$('[data-sub]').forEach(p => p.textContent = EFF[st.eff].sub);
-  $$('[data-effname]').forEach(p => p.textContent = EFF[st.eff].name);
   const ek = $('.effknob .dial'); if (ek) ek.style.setProperty('--p', [.278, .5, .722][EKEYS.indexOf(st.eff)]);
   $$('[data-act="reset"]').forEach(b => b.disabled = isDef());
-  syncLv();
-  $('[data-state]').textContent = `Salvato nella Canzone «Ma Lei»: Effetto ${EFF[st.eff].name} · ` + KN.map(K => `${K.cname || K.name} ${K.fmt(st.snd[K.k])}`).join(' · ');
 }
-function syncLv() {
-  $$('[data-lv]').forEach(s => { const n = +s.dataset.lv; s.querySelector('b').textContent = lvPct(n) + '%'; s.classList.toggle('on', n === st.lv); });
+// Il display spiega la manopola sotto il mouse; "solo Vocoder" sta qui invece che sotto la manopola.
+function setLcd(k) {
+  const el = $('[data-lcd]');
+  if (!el) return;
+  if (!k) return void (el.textContent = LCD);
+  if (k.startsWith('eff:')) { const E = EFF[k.slice(4)]; return void (el.textContent = `${E.name}: ${E.sub}`); }
+  const K = KM[k];
+  el.textContent = `${K.name}: ${K.help}${K.for.length < 3 ? ` Vale ${onlyLabel(K)}.` : ''}`;
 }
-function setLcd(k) { const el = $('[data-lcd]'); if (el) el.textContent = k ? `${KM[k].name}: ${KM[k].help}` : LCD; }
-function go(v) { cur = v; st.ui.panel = null; try { history.replaceState(null, '', '#' + v); } catch {} build(); }
-const step = d => VK[(VK.indexOf(cur) + d + VK.length) % VK.length];
 
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-act]');
   if (!b) return;
   const a = b.dataset.act, v = b.dataset.val, ed = beads[st.edit], u = st.ui;
-  if (a === 'prev' || a === 'next') return go(step(a === 'next' ? 1 : -1));
   if (a === 'mode') st.mode = v;
   if (a === 'format') st.format = v;
   if (a === 'mano') st.mano = v;
@@ -455,24 +337,16 @@ document.addEventListener('click', e => {
   if (ed && a === 'oct') ed.o = +v;
   if (a === 'eff') st.eff = v;
   if (a === 'effcycle') st.eff = EKEYS[(EKEYS.indexOf(st.eff) + 1) % EKEYS.length];
-  if (a === 'set') setIdx(b.dataset.k, +b.dataset.i);
   if (a === 'reset') KN.forEach(K => st.snd[K.k] = K.def);
   if (a === 'panel') u.panel = v;
   if (a === 'close') u.panel = null;
-  if (a === 'tab') u.tab = v;
-  if (a === 'more') u.more = !u.more;
-  if (a === 'tip') u.tip = u.tip === v ? null : v;
   if (a === 'desk') u.desk = !u.desk;
   lastCycle = performance.now();
   build();
 });
-document.addEventListener('input', e => {
-  if (e.target.id === 'titolo') st.title = e.target.value;
-  const k = e.target.dataset.knob;
-  if (k) { setIdx(k, +e.target.value); sync(); }
-});
+document.addEventListener('input', e => { if (e.target.id === 'titolo') st.title = e.target.value; });
 
-// Manopole rotonde (variante C): trascina su/giù, rotellina, frecce, doppio clic = valore di partenza.
+// Manopole: trascina su/giù, rotellina, frecce, doppio clic = valore di partenza.
 let drag = null, wheelAcc = 0;
 document.addEventListener('pointerdown', e => {
   const kn = e.target.closest('.knob[data-knob]');
@@ -500,16 +374,12 @@ document.addEventListener('wheel', e => {
 const showHelp = e => { const h = e.target.closest?.('[data-help]'); if (h) setLcd(h.dataset.help); };
 document.addEventListener('mouseover', showHelp);
 document.addEventListener('focusin', showHelp);
-
 document.addEventListener('keydown', e => {
   const kn = e.target.closest?.('.knob[data-knob]');
   const KEYS = {ArrowUp: 1, ArrowRight: 1, ArrowDown: -1, ArrowLeft: -1, Home: -99, End: 99};
   if (kn && e.key in KEYS) { e.preventDefault(); setIdx(kn.dataset.knob, idx(kn.dataset.knob) + KEYS[e.key]); sync(); return; }
-  if (e.key === 'Escape' && st.ui.panel) { st.ui.panel = null; build(); return; }
-  if (!['ArrowLeft', 'ArrowRight'].includes(e.key) || e.target.closest?.('input,textarea,[contenteditable],[role=slider]')) return;
-  go(step(e.key === 'ArrowRight' ? 1 : -1));
+  if (e.key === 'Escape' && st.ui.panel) { st.ui.panel = null; build(); }
 });
-addEventListener('hashchange', () => { const h = location.hash.slice(1); if (VK.includes(h) && h !== cur) go(h); });
 
 // --- video simulato (dal prototipo Stile grafico): l'onda segue Effetto e Intensità
 const HAND = [[.50,.95],[.38,.86],[.29,.75],[.23,.65],[.18,.56],[.40,.58],[.37,.42],[.35,.31],[.34,.21],[.50,.56],[.50,.38],[.50,.26],[.50,.15],[.59,.58],[.61,.42],[.62,.31],[.63,.22],[.67,.63],[.71,.51],[.73,.43],[.75,.35]];
@@ -646,7 +516,7 @@ function draw(cv, t) {
 
 function frame(now) {
   if (st.edit < 0 && now - lastCycle > 2600) { st.i = (st.i + 1) % beads.length; lastCycle = now; paint(); }
-  if (now - lastLv > 3700) { st.lv = st.lv % 5 + 1; lastLv = now; syncLv(); } // seconda mano simulata
+  if (now - lastLv > 3700) { st.lv = st.lv % 5 + 1; lastLv = now; } // seconda mano simulata
   const ease = (fd, n) => {
     const open = new Set(OPEN_ORDER.slice(0, n));
     fd.forEach((v, f) => { const target = open.has(f) ? 0 : 1; fd[f] = reduce ? target : v + (target - v) * .15; });
