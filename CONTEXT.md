@@ -41,7 +41,7 @@ Livello da 1 a 5 scelto dalle dita alzate della seconda mano. Con il vocoder acc
 _Avoid_: volume, gain, mix
 
 **Canzone**:
-Un brano di Keopees salvato nell'app: il nome, le sue 5 Perline e tutte le Impostazioni con cui lo registra. Il nome è il titolo che può comparire nel video accanto all'accordo.
+Un brano di Keopees salvato nell'app: il nome, le sue 5 Perline, la Modalità, il Formato e tutte le Impostazioni con cui lo registra. Il nome è il titolo che può comparire nel video accanto all'accordo.
 _Avoid_: preset, set, progetto
 
 **Impostazioni**:
