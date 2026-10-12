@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="it">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Live Vocoder</title>
+<style>
+@font-face{font-family:"Pacifico";src:url("vendor/fonts/Pacifico-Regular.ttf")}
+@font-face{font-family:"Amatic SC";font-weight:700;src:url("vendor/fonts/AmaticSC-Bold.ttf")}
+@font-face{font-family:"Nunito";font-weight:200 1000;src:url("vendor/fonts/Nunito.ttf")}
+</style>
+<style>
+/* Schermata di Live Vocoder: il prototipo pannello-suono (a0270c0) rifatto identico (spec §7).
+   Tutta la schermata sta nella finestra, senza scroll verticale: ruota e video si rimpiccioliscono con l'altezza. */
+:root{
+  /* Layout: finestra intera; sopra a sinistra titolo, Canzone e ruota di perline, a destra video-polaroid e comandi; sotto il banco del Suono */
+  --rosa:#FF4F9A; --rosa-chiaro:#FF8FC4; --confetto:#FFD3E7;
+  --viola:#6B2BD9; --viola-luce:#A27BFF;
+  --prugna:#2B1145; --prugna-2:#43205F; --prugna-tenue:#6A4D7F; --notte:#1A0A2B;
+  --crema:#FFF0D9; --lilla:#DCC6FF;
+  --ombra:rgb(10 2 20 / .65);
+  --f-titolo:"Pacifico","Brush Script MT",cursive;
+  --f-etichetta:"Amatic SC","Arial Narrow",sans-serif;
+  --f-testo:"Nunito","Avenir Next",system-ui,sans-serif;
+  --retro:.025em .025em 0 var(--rosa-chiaro),.05em .05em 0 var(--rosa-chiaro),.075em .075em 0 var(--rosa-chiaro),.11em .11em .05em rgb(43 17 69 / .25);
+  --perla:radial-gradient(circle at 35% 30%,var(--viola-luce),var(--viola) 75%);
+  --perla-rosa:radial-gradient(circle at 35% 30%,var(--rosa-chiaro),var(--rosa) 75%);
+  --ar:9/16; --arn:.5625;
+  color-scheme:dark;
+}
+:root[data-format="orizzontale"]{--ar:16/9;--arn:1.7778}
+html,body{height:100%}
+body{margin:0;background:var(--confetto);color:var(--prugna);font:16px/1.45 var(--f-testo)}
+[hidden]{display:none!important}
+[data-act]{cursor:pointer}
+[data-act]:focus-visible,input:focus-visible,.knob:focus-visible{outline:2px solid var(--viola);outline-offset:3px}
+button:disabled{opacity:.45;cursor:default}
+
+.app{position:relative;height:100dvh;display:grid;grid-template-rows:minmax(0,1fr) auto}
+.main{min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:32px;padding:22px 32px 18px}
+.left,.right{min-height:0;display:flex;flex-direction:column;gap:14px}
+.right{align-items:center}
+.head{display:flex;align-items:flex-end;gap:12px 22px;flex-wrap:wrap}
+.poster{margin:0;font:400 clamp(2.4rem,7.5vh,6rem)/1.05 var(--f-titolo);color:var(--viola);text-shadow:var(--retro)}
+.sign{display:flex;align-items:center;gap:12px;padding-bottom:.6vh}
+.by{font:700 1.4rem/1 var(--f-etichetta);letter-spacing:.14em;text-transform:uppercase}
+.app-icon{--s:52px;flex:none;width:var(--s);height:var(--s);box-sizing:border-box;padding-bottom:calc(var(--s)*.06);border-radius:calc(var(--s)*.225);background:linear-gradient(var(--rosa-chiaro),var(--rosa));display:grid;place-items:center;font:400 calc(var(--s)*.52)/1 var(--f-titolo);color:var(--viola);text-shadow:.025em .025em 0 var(--crema),.05em .05em 0 var(--crema),.075em .075em 0 var(--crema),.11em .11em .05em var(--ombra)}
+.tools{position:relative;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.song{all:unset;cursor:pointer;padding:8px 18px;border-radius:999px;background:var(--crema);font-weight:800;box-shadow:inset 0 0 0 2px var(--rosa-chiaro)}
+.song b{font:400 1.1rem/1 var(--f-titolo);color:var(--rosa)}
+
+/* menu Canzone: scegli, crea, rinomina, elimina */
+.songmenu{position:absolute;z-index:7;top:calc(100% + 8px);left:0;width:min(340px,90vw);max-height:calc(100dvh - 180px);overflow-y:auto;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:22px;background:var(--crema);box-shadow:0 0 0 2px var(--rosa-chiaro),0 24px 48px -16px var(--ombra)}
+.songmenu ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.songrow{all:unset;cursor:pointer;box-sizing:border-box;width:100%;display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:7px 12px;border-radius:14px}
+.songrow b{font:400 1.15rem/1.25 var(--f-titolo);color:var(--viola)}
+.songrow small{font-size:.75rem;font-weight:700;color:var(--prugna-tenue);white-space:nowrap}
+.songrow:hover{background:var(--confetto)}
+.songrow[aria-current="true"]{background:var(--confetto);box-shadow:inset 0 0 0 2px var(--rosa)}
+.newsong{all:unset;cursor:pointer;text-align:center;padding:10px;border-radius:14px;background:var(--rosa);color:var(--crema);font-weight:800}
+.sform{display:flex;flex-direction:column;gap:8px}
+#song-name{padding:8px 14px;border:0;border-radius:999px;background:var(--confetto);color:var(--prugna);font:400 1.05rem/1.3 var(--f-titolo);box-shadow:inset 0 0 0 2px var(--rosa-chiaro)}
+.sbtns{display:flex;gap:8px;flex-wrap:wrap}
+.pill.small{padding:6px 12px;font-size:.8rem}
+.pill.danger{background:var(--rosa);color:var(--crema);box-shadow:none}
+.err{margin:0;font-size:.8rem;font-weight:800;color:var(--rosa)}
+.pill{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border-radius:999px;background:var(--crema);color:var(--prugna);font-weight:800;font-size:.9rem;box-shadow:inset 0 0 0 2px var(--rosa-chiaro)}
+
+/* ruota-braccialetto: grande quanto lo spazio rimasto; perline viola, quella suonata rosa */
+.wheel-box{position:relative;flex:1;min-height:0;container-type:size}
+.wheel{position:relative;width:min(100cqw,100cqh,300px);aspect-ratio:1;container-type:size}
+.wheel::before{content:"";position:absolute;inset:15cqw;border-radius:50%;border:2px solid var(--rosa-chiaro)}
+.wheel button{all:unset;cursor:pointer;position:absolute;left:50%;top:50%;width:25cqw;height:25cqw;margin:-12.5cqw;border-radius:50%;display:grid;place-content:center;text-align:center;background:var(--perla);color:var(--crema);box-shadow:inset -3px -3px 6px rgb(43 17 69 / .3);transform:rotate(var(--a)) translateY(-35cqw) rotate(calc(-1 * var(--a)));transition:box-shadow .15s}
+.wheel button b{font:400 6cqw/1.25 var(--f-titolo);white-space:nowrap}
+.wheel button small{font-size:3.8cqw;font-weight:800}
+.wheel button.on{background:var(--perla-rosa);box-shadow:0 0 22px var(--rosa)}
+.wheel button.editing{box-shadow:0 0 0 4px var(--crema),0 0 0 7px var(--viola)}
+.core{position:absolute;inset:34%;display:grid;place-items:center;text-align:center;font:400 9cqw/1.1 var(--f-titolo);color:var(--rosa)}
+.wheel button.long b{font-size:4.6cqw}
+.core.long{font-size:6.5cqw}
+.hint{margin:0;font-size:.8rem;font-weight:700}
+
+/* editor della Nota: galleggia accanto alla ruota, così non spinge giù niente */
+.editor{position:absolute;z-index:4;top:0;left:calc(min(100cqw,100cqh,300px) + 16px);width:min(340px,calc(100cqw - min(100cqw,100cqh,300px)));min-width:260px;max-height:100cqh;overflow-y:auto;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;padding:14px 16px;border-radius:24px;background:var(--crema);box-shadow:0 0 0 2px var(--rosa-chiaro),0 18px 36px -18px var(--viola)}
+.editor h2{margin:0;font-size:1rem;font-weight:800}
+.editor h2 b{font:400 1.3rem/1 var(--f-titolo);color:var(--rosa)}
+.row{display:flex;flex-direction:column;gap:5px}
+.row > span{font-size:.8rem;font-weight:800;color:var(--viola)}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chips button,.done{all:unset;cursor:pointer;padding:5px 11px;border-radius:999px;font-size:.82rem;font-weight:800;background:var(--confetto);color:var(--prugna);box-shadow:inset 0 0 0 2px var(--lilla)}
+.chips button[aria-pressed="true"]{background:var(--viola);color:var(--crema);box-shadow:none}
+.done{align-self:flex-start;padding:7px 20px;background:var(--rosa);color:var(--crema);box-shadow:none}
+
+/* video: la polaroid prende l'altezza rimasta, il riquadro si adatta al Formato */
+.polaroid{position:relative;flex:1;min-height:0;width:100%;box-sizing:border-box;display:flex;flex-direction:column;padding:14px 14px 0;background:var(--crema);border-radius:6px;box-shadow:0 24px 50px -24px var(--ombra)}
+.polaroid::before{content:"";position:absolute;top:-12px;left:50%;width:120px;height:26px;margin-left:-60px;background:var(--rosa-chiaro);opacity:.85;transform:rotate(3deg)}
+.frame-box{flex:1;min-height:0;container-type:size;display:grid;place-items:center}
+.frame{width:min(calc(100cqw - 16px),calc((100cqh - 16px) * var(--arn)));aspect-ratio:var(--ar);border-radius:4px;overflow:hidden;outline:2px dashed var(--rosa);outline-offset:6px}
+.frame canvas{display:block;width:100%;height:100%}
+.cap{margin:0;padding:8px 0;text-align:center;font:700 1.2rem/1.1 var(--f-etichetta)}
+.dock{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-items:center}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;padding:4px;border-radius:999px;background:var(--crema);box-shadow:inset 0 0 0 2px var(--rosa-chiaro)}
+.seg button{all:unset;cursor:pointer;text-align:center;padding:9px 12px;border-radius:999px;font-weight:800;font-size:.88rem;color:var(--prugna)}
+.seg button[aria-pressed="true"]{background:var(--viola);color:var(--crema)}
+.rec{all:unset;cursor:pointer;display:flex;align-items:center;gap:10px;padding:13px 22px;border-radius:999px;background:var(--rosa);color:var(--crema);font-weight:800;font-size:1.05rem;box-shadow:0 12px 30px -12px var(--rosa)}
+.rec::before{content:"";width:13px;height:13px;border-radius:50%;background:var(--crema)}
+
+/* banco del Suono */
+.desk{padding:10px 24px 14px;background:var(--prugna);color:var(--crema);border-top:3px dashed var(--rosa-chiaro)}
+.desk-head{display:flex;align-items:center;gap:10px 14px}
+.desk-head h3{margin:0;font:400 1.45rem/1 var(--f-titolo);color:var(--rosa-chiaro)}
+.lcd{flex:1;min-width:0;margin:0;padding:6px 14px;border-radius:12px;background:var(--notte);color:var(--confetto);font-size:.8rem;line-height:1.35;height:calc(2 * 1.35em);overflow:hidden;display:flex;align-items:center}
+.pill.dark{background:transparent;color:var(--crema);box-shadow:inset 0 0 0 2px var(--rosa-chiaro);padding:7px 16px}
+.guide{all:unset;cursor:pointer;flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--viola);color:var(--crema);font:400 1.3rem/1 var(--f-titolo);box-shadow:0 0 0 2px var(--rosa-chiaro)}
+.desk-body{display:flex;flex-wrap:wrap;gap:12px 26px;margin-top:10px;align-items:flex-start}
+.grp{display:flex;flex-direction:column;gap:6px}
+.grp > span{font:700 1.05rem/1 var(--f-etichetta);letter-spacing:.14em;text-transform:uppercase;color:var(--rosa-chiaro)}
+.grp > div{display:flex;gap:6px}
+.knob{display:flex;flex-direction:column;align-items:center;gap:3px;width:74px;text-align:center;cursor:ns-resize;touch-action:none;user-select:none;border-radius:12px}
+.dial{--p:.5;position:relative;width:52px;height:52px;border-radius:50%;background:conic-gradient(from 225deg,var(--rosa) calc(var(--p) * 270deg),rgb(255 240 217 / .15) 0 270deg,transparent 0)}
+.dial::before{content:"";position:absolute;inset:6px;border-radius:50%;background:var(--perla);box-shadow:inset -3px -3px 6px rgb(26 10 43 / .4)}
+.dial::after{content:"";position:absolute;left:50%;top:50%;width:3px;height:17px;margin:-17px 0 0 -1.5px;border-radius:2px;background:var(--crema);transform-origin:50% 100%;transform:rotate(calc(-135deg + var(--p) * 270deg))}
+.knob b{font-size:.72rem;font-weight:800;line-height:1.2}
+.knob output{font-size:.72rem;color:var(--confetto);font-variant-numeric:tabular-nums}
+.knob.off{opacity:.35}
+.effknob{display:flex;align-items:center;gap:10px}
+.effknob .dial{all:unset;cursor:pointer;--p:.5;position:relative;width:64px;height:64px;border-radius:50%;background:rgb(255 240 217 / .15)}
+.effknob .dial::before{content:"";position:absolute;inset:5px;border-radius:50%;background:var(--perla-rosa)}
+.effknob .dial::after{content:"";position:absolute;left:50%;top:50%;width:4px;height:22px;margin:-22px 0 0 -2px;border-radius:2px;background:var(--crema);transform-origin:50% 100%;transform:rotate(calc(-135deg + var(--p) * 270deg))}
+.effnames{display:flex;flex-direction:column;gap:3px}
+.grp > .devs{flex-direction:column;gap:5px}
+.dev{display:grid;grid-template-columns:auto 190px;white-space:nowrap;align-items:center;gap:8px;font-size:.72rem;font-weight:800}
+.dev select{-webkit-appearance:none;appearance:none;width:100%;padding:4px 26px 4px 10px;border:0;border-radius:999px;color:var(--crema);font:700 .75rem/1.3 var(--f-testo);box-shadow:inset 0 0 0 1.5px var(--rosa-chiaro);
+  background:var(--prugna-2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23FF8FC4'/%3E%3C/svg%3E") no-repeat right 10px center}
+.effnames button{all:unset;cursor:pointer;font-weight:800;font-size:.85rem;color:rgb(255 240 217 / .55)}
+.effnames button[aria-pressed="true"]{color:var(--rosa-chiaro)}
+
+/* pannello laterale (Impostazioni, Guida) */
+.scrim{position:absolute;inset:0;z-index:5;background:rgb(26 10 43 / .35)}
+.sheet{position:absolute;top:0;right:0;bottom:0;z-index:6;width:min(440px,100%);box-sizing:border-box;overflow-y:auto;display:flex;flex-direction:column;gap:16px;padding:22px 22px 28px;background:var(--crema);color:var(--prugna);box-shadow:-20px 0 50px -20px var(--ombra)}
+.sheet h2{margin:0;padding-right:40px;font:400 1.9rem/1.1 var(--f-titolo);color:var(--viola)}
+.x{all:unset;cursor:pointer;position:absolute;top:16px;right:16px;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--confetto);font-weight:800;font-size:1.2rem}
+.lbl{font-size:.8rem;font-weight:800;color:var(--viola);margin:0}
+.ctx{margin:0;font-size:.85rem}
+.gl{margin:0;display:grid;gap:4px 0}
+.gl dt{font-weight:800;color:var(--viola);margin-top:8px}
+.gl dd{margin:0;font-size:.88rem}
+.only{font-size:.68rem;font-weight:800;padding:2px 8px;border-radius:999px;background:var(--lilla);color:var(--prugna);white-space:nowrap}
+.vset{display:flex;flex-direction:column;gap:14px}
+.vrow{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:.9rem;font-weight:800}
+.vrow b{font-weight:700;color:var(--prugna-tenue)}
+.switch{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:8px;font-size:.9rem;font-weight:800;color:var(--prugna)}
+.track{position:relative;flex:none;width:42px;height:24px;border-radius:999px;background:var(--crema);box-shadow:inset 0 0 0 2px var(--rosa-chiaro);transition:background .15s}
+.track::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--rosa-chiaro);transition:transform .15s}
+.switch[aria-checked="true"] .track{background:var(--viola);box-shadow:none}
+.switch[aria-checked="true"] .track::after{transform:translateX(18px);background:var(--crema)}
+#titolo{width:11rem;max-width:100%;padding:6px 12px;border:0;border-radius:999px;background:var(--confetto);color:var(--prugna);font:400 1rem/1.3 var(--f-titolo);box-shadow:inset 0 0 0 2px var(--rosa-chiaro)}
+
+/* durante la Registrazione è tutto bloccato tranne Stop (spec §6) */
+.app.registrando .tools,.app.registrando .wheel-box,.app.registrando .hint,.app.registrando .dock .seg,.app.registrando .desk{pointer-events:none;opacity:.5}
+/* avvisi rosa (avvisi.js) */
+#avvisi{position:absolute;z-index:9;top:14px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;width:min(620px,92vw);pointer-events:none}
+.avviso{pointer-events:auto;display:flex;align-items:center;flex-wrap:wrap;gap:8px 10px;padding:10px 12px 10px 18px;border-radius:22px;background:var(--crema);color:var(--prugna);font-weight:800;font-size:.9rem;box-shadow:inset 0 0 0 2px var(--rosa),0 18px 36px -18px var(--ombra)}
+.avviso > span{flex:1;min-width:12rem}
+.avviso .chiudi{all:unset;cursor:pointer;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--confetto)}
+/* finestra stretta (non è il Mac di Keopees): si impila e scorre */
+@media (max-width:820px){.app{height:auto;min-height:100dvh}.main{grid-template-columns:1fr}.wheel-box,.polaroid{flex:none;height:60vh}}
+@media (prefers-reduced-motion:reduce){.track,.track::after,.wheel button{transition:none}}
+</style>
+
+<div class="app">
+  <main class="main">
+    <div class="left">
+      <div class="head">
+        <p class="poster">Live<br>Vocoder</p>
+        <div class="sign"><div class="app-icon">K</div><span class="by">by Keopees</span></div>
+      </div>
+      <div class="tools">
+        <button class="song" data-act="songmenu" aria-haspopup="dialog">Canzone: <b data-bind="song"></b> ▾</button>
+        <button class="pill" data-act="panel" data-val="imp">Impostazioni</button>
+        <div id="slot-menu"></div>
+      </div>
+      <div class="wheel-box">
+        <div class="wheel" id="wheel"><div class="core" data-bind="chord">Lam</div></div>
+        <div class="editor" id="editor" hidden>
+          <h2>Nota da <span data-bind="edDita"></span>: <b data-bind="edName"></b></h2>
+          <div class="row"><span>Base</span><div class="chips" id="chips-root"></div></div>
+          <div class="row"><span>Tipo</span><div class="chips" id="chips-type"></div></div>
+          <div class="row"><span>Ottava</span><div class="chips" id="chips-oct"></div></div>
+          <button class="done" data-act="done">Fatto</button>
+        </div>
+      </div>
+      <p class="hint">Tocca una Nota per cambiarla.</p>
+    </div>
+
+    <div class="right">
+      <div class="polaroid"><div class="frame-box"><div class="frame"><canvas></canvas></div></div><p class="cap">questo finisce nel video ♥</p></div>
+      <div class="dock">
+        <div class="seg" role="group" aria-label="Modalità"><button data-act="mode" data-val="accordi">Accordi</button><button data-act="mode" data-val="nota">Nota singola</button></div>
+        <div class="seg" role="group" aria-label="Formato"><button data-act="format" data-val="verticale">Verticale</button><button data-act="format" data-val="orizzontale">Orizzontale</button></div>
+        <button class="rec" data-act="rec">Registra 00:00</button>
+      </div>
+    </div>
+  </main>
+  <section class="desk" id="desk" aria-label="Suono"></section>
+  <div id="slot-sheet"></div>
+  <video id="cam" playsinline muted hidden></video>
+  <div id="avvisi" aria-live="polite"></div>
+</div>
+
+<script type="module" src="ui.js"></script>

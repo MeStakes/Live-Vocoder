@@ -1,0 +1,11 @@
+{
+  "name": "live-vocoder",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "vendor": "sh scripts/vendor.sh",
+    "app": "sh scripts/app.sh",
+    "test": "node --test test/*.test.js && cd src-tauri && cargo test --release"
+  },
+  "devDependencies": { "@tauri-apps/cli": "2.12.2" }
+}

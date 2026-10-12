@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>NSMicrophoneUsageDescription</key>
+  <string>Live Vocoder sente la tua voce dal microfono e te la fa sentire in cuffia con l'Effetto.</string>
+  <key>NSCameraUsageDescription</key>
+  <string>Live Vocoder legge le tue mani dalla camera e gira il video.</string>
+</dict>
+</plist>
