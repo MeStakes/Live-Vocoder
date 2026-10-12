@@ -68,6 +68,7 @@ pub struct Dispositivo {
     pub(crate) ingresso: bool,
     pub(crate) uscita: bool,
     tipo: Tipo,
+    integrato: bool, // del Mac (microfono, altoparlanti, jack)
     predefinito_ingresso: bool,
     predefinito_uscita: bool,
 }
@@ -86,6 +87,7 @@ pub fn dispositivi() -> Vec<Dispositivo> {
             ingresso: dimensione(id, cc(b"stm#"), cc(b"inpt")) > 0,
             uscita: dimensione(id, cc(b"stm#"), cc(b"outp")) > 0,
             tipo: tipo(numero(id, cc(b"tran")), &testo(id, cc(b"uid "))),
+            integrato: numero(id, cc(b"tran")) == cc(b"bltn"),
             predefinito_ingresso: id == din,
             predefinito_uscita: id == dout,
         })

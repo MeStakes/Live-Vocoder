@@ -5,7 +5,7 @@ import { DEF_SONG, SONG_KEYS, controllaNome, datiIniziali, carica, salva } from 
 import { disegna, misura } from './video.js';
 import * as motore from './motore.js';
 import { avviso, stato } from './avvisi.js';
-import { parametriRust, scegli } from './manopole.js';
+import { parametriRust, scegli, ingressi } from './manopole.js';
 import { apriCamera } from './camera.js';
 import { avviaMani } from './mani.js';
 import { avviaRegistrazione } from './registra.js';
@@ -267,10 +267,10 @@ let giroDisp = null;
 function controllaDispositivi() {
   return (giroDisp ??= (async () => {
     const [audio, camere] = await Promise.all([invoke('dispositivi'), invoke('camere')]);
-    const ins = audio.filter(d => d.ingresso), outs = audio.filter(d => d.uscita);
+    const ing = ingressi(audio), outs = audio.filter(d => d.uscita);
     const prima = JSON.stringify(st.liste);
-    st.liste = { in: ins.map(d => d.nome), out: outs.map(d => d.nome), cam: camere.map(c => c.nome) };
-    const inn = scegli(st.liste.in, st.dev.in, ins.find(d => d.predefinito_ingresso)?.nome);
+    st.liste = { in: ing.lista, out: outs.map(d => d.nome), cam: camere.map(c => c.nome) };
+    const inn = scegli(st.liste.in, st.dev.in, ing.predefinito);
     const out = scegli(st.liste.out, st.dev.out, outs.find(d => d.predefinito_uscita)?.nome);
     const cam = scegli(st.liste.cam, st.dev.cam, camere.find(c => c.iphone)?.nome);
     const tipo = outs.find(d => d.nome === out)?.tipo;

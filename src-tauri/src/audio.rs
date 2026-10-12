@@ -167,6 +167,24 @@ mod tests {
 
     // A mano: ogni nome di CoreAudio deve esistere anche in cpal (dispositivi.rs), se no avvia_audio dice «manca …».
     // cargo test --release nomi_uguali -- --ignored --nocapture
+    // A mano: frequenze che ogni dispositivo accetta (ingresso e uscita) e predefiniti di macOS.
+    // cargo test --release frequenze -- --ignored --nocapture
+    #[test]
+    #[ignore]
+    fn frequenze() {
+        use cpal::traits::DeviceTrait;
+        let host = cpal::default_host();
+        let pre = |d: Option<cpal::Device>| d.map(|d| nome(&d)).unwrap_or_default();
+        println!("predefiniti: ingresso {:?}, uscita {:?}", pre(host.default_input_device()), pre(host.default_output_device()));
+        for d in host.devices().unwrap() {
+            let ins: Vec<String> = d.supported_input_configs().map(|c| c.map(|c| format!("{}ch {:?}-{:?}", c.channels(), c.min_sample_rate(), c.max_sample_rate())).collect()).unwrap_or_default();
+            let outs: Vec<String> = d.supported_output_configs().map(|c| c.map(|c| format!("{}ch {:?}-{:?}", c.channels(), c.min_sample_rate(), c.max_sample_rate())).collect()).unwrap_or_default();
+            if !ins.is_empty() || !outs.is_empty() {
+                println!("{:?}\n  ingresso {ins:?}\n  uscita   {outs:?}", nome(&d));
+            }
+        }
+    }
+
     #[test]
     fn parte_muto() {
         // finché la pagina non sa se l'Uscita sono le cuffie, l'Ascolto tace (altoparlanti = fischio)

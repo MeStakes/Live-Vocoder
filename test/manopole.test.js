@@ -19,3 +19,19 @@ test('Dispositivo che sparisce e ricompare: la scelta di Keopees torna', () => {
   assert.equal(scegli(['A', 'B'], undefined, 'B'), 'B');
   assert.equal(scegli(['A'], 'X', 'Y'), 'A');
 });
+
+import { ingressi } from '../src/manopole.js';
+
+test('AirPods collegate: il loro microfono non si usa, si ripiega su quello del Mac', () => {
+  const d = (nome, tipo, x = {}) => ({ nome, ingresso: true, uscita: false, tipo, integrato: false, predefinito_ingresso: false, ...x });
+  const audio = [
+    d('Scarlett 2i2 USB', 'cuffie'),
+    d('Microfono MacBook Pro', 'cuffie', { integrato: true }),
+    d('AirPods Pro 2 di Riccardo', 'bluetooth', { predefinito_ingresso: true }),
+    { nome: 'AirPods Pro 2 di Riccardo', ingresso: false, uscita: true, tipo: 'bluetooth', integrato: false, predefinito_ingresso: false },
+  ];
+  assert.deepEqual(ingressi(audio), { lista: ['Scarlett 2i2 USB', 'Microfono MacBook Pro'], predefinito: 'Microfono MacBook Pro' });
+  // senza AirPods vale il predefinito di macOS, come prima
+  audio[0].predefinito_ingresso = true;
+  assert.equal(ingressi(audio.slice(0, 2)).predefinito, 'Scarlett 2i2 USB');
+});

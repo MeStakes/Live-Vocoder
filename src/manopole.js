@@ -56,5 +56,13 @@ export function parametriRust({ eff, snd, lv }) {
   };
 }
 
+// Ingressi usabili: mai un microfono Bluetooth. Quello delle AirPods va solo a 24 kHz e porta anche l'uscita
+// in vivavoce, peggiorando l'Ascolto. Se il predefinito di macOS è Bluetooth, si ripiega sul microfono del Mac.
+export function ingressi(audio) {
+  const ok = audio.filter((d) => d.ingresso && d.tipo !== 'bluetooth');
+  const pre = ok.find((d) => d.predefinito_ingresso) ?? ok.find((d) => d.integrato) ?? ok[0];
+  return { lista: ok.map((d) => d.nome), predefinito: pre?.nome };
+}
+
 // Il Dispositivo scelto da Keopees se c'è; altrimenti quello predefinito di macOS. La scelta resta salvata e torna quando ricompare.
 export const scegli = (lista, voluto, predefinito) => (lista.includes(voluto) ? voluto : lista.includes(predefinito) ? predefinito : lista[0]);
