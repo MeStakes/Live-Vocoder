@@ -157,6 +157,7 @@ Gamme, gradini, nomi e testi del display sono quelli del prototipo (`KN`, `EFF`,
 - Se l'Uscita sono gli **altoparlanti**, l'Ascolto resta spento (fischierebbe) e compare un avviso rosa. Il motore audio gira lo stesso e manda silenzio all'Uscita, così la Registrazione ha l'audio.
 - Se l'Uscita è **Bluetooth**, l'Ascolto resta acceso e compare l'avviso rosa "arriva in ritardo".
 - Il tipo di uscita si riconosce dal tipo di trasporto CoreAudio.
+- **I microfoni Bluetooth non si usano** e non compaiono tra gli Ingressi (deciso il 2026-10-12). Il microfono delle AirPods va solo a 24 kHz e porta le AirPods in vivavoce: anche l'Ascolto scende a 24 kHz mono e la voce registrata suona come al telefono. Se il microfono predefinito di macOS è Bluetooth, si usa quello del Mac. Le AirPods restano usabili come Uscita, con l'avviso del ritardo (~150–250 ms in più); la Registrazione non ne risente.
 - **Ritardo:** con il microfono interno è ~40 ms. Dipende dall'elaborazione dei 3 microfoni del Mac, non dallo stack (#6). Riccardo lo accetta per ora e lo giudica Keopees in beta. Se non va bene: cuffie con il microfono sul filo nel jack, oppure un'interfaccia USB.
 
 ## 4. Gesti
