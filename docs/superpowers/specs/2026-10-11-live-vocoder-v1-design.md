@@ -355,7 +355,7 @@ Decisi in #8 e confermati in #12. Niente Developer ID.
 - **Aggiornamenti:**
   - si usa `tauri-plugin-updater` con `bundle.createUpdaterArtifacts: true` e una chiave minisign (`tauri signer generate`, `TAURI_SIGNING_PRIVATE_KEY` alla build);
   - `latest.json` ha `darwin-aarch64` → `url` + `signature`;
-  - versioni e `latest.json` stanno nel repo **pubblico** `MeStakes/live-vocoder-releases`, che contiene solo le release e niente codice. Il repo principale resta privato;
+  - versioni e `latest.json` stanno nelle release del repo principale `MeStakes/Live-Vocoder`, che è **pubblico**;
   - il controllo si fa solo all'avvio: "C'è una versione nuova ✨" → **Aggiorna** (scarica, sostituisce l'app, la riapre) / **Più tardi**. Mai durante una Registrazione.
   - Il file scaricato dall'app non ha quarantena, quindi non serve "Apri comunque" e i permessi non vengono richiesti di nuovo (provato in #12).
   - Se l'aggiornamento fallisce: avviso "non è andato, riprova più tardi", e l'app continua a funzionare.

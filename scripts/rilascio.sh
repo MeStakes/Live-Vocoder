@@ -1,5 +1,5 @@
 #!/bin/sh
-# Costruisce una versione di Live Vocoder e la pubblica su MeStakes/live-vocoder-releases (spec §10).
+# Costruisce una versione di Live Vocoder e la pubblica su MeStakes/Live-Vocoder (spec §10).
 # Uso: sh scripts/rilascio.sh 0.1.0   (serve la cartella ~/.live-vocoder di scripts/certificato.sh)
 set -e
 V="$1"
@@ -16,11 +16,11 @@ O="dist/$V"
 rm -rf "$O" && mkdir -p "$O"
 cp "$B"/dmg/*_"$V"_*.dmg "$O/LiveVocoder-$V.dmg"
 cp "$B/macos/Live Vocoder.app.tar.gz" "$O/LiveVocoder-$V.app.tar.gz"
-U="https://github.com/MeStakes/live-vocoder-releases/releases/download/v$V"
+U="https://github.com/MeStakes/Live-Vocoder/releases/download/v$V"
 cat > "$O/latest.json" <<JSON
 { "version": "$V", "pub_date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
   "platforms": { "darwin-aarch64": { "url": "$U/LiveVocoder-$V.app.tar.gz",
     "signature": "$(cat "$B/macos/Live Vocoder.app.tar.gz.sig")" } } }
 JSON
-gh release create "v$V" "$O"/* -R MeStakes/live-vocoder-releases -t "Live Vocoder $V" -n "Versione $V"
+gh release create "v$V" "$O"/* -R MeStakes/Live-Vocoder --target "$(git rev-parse HEAD)" -t "Live Vocoder $V" -n "Versione $V"
 echo "Pubblicata. Link per la prima installazione: $U/LiveVocoder-$V.dmg"

@@ -8,8 +8,7 @@ Per Riccardo. Spec §10, prove in #8 e #12.
 2. **Backup** della cartella `~/.live-vocoder/` e della password del certificato, fuori da questo Mac (per esempio una chiavetta e un gestore di password).
    - Se si perde `certificato.p12`, Keopees deve ridare i permessi Camera e Microfono una volta.
    - Se si perde `chiave-updater.key`, l'app installata non accetta più aggiornamenti e va reinstallata a mano.
-3. Repo pubblico solo per le versioni (niente codice):
-   `gh repo create MeStakes/live-vocoder-releases --public -d "Versioni di Live Vocoder"`
+3. Le versioni stanno nelle release di `MeStakes/Live-Vocoder`, che deve restare pubblico: se torna privato, l'app di Keopees non trova più gli aggiornamenti.
 
 ## Ogni versione
 

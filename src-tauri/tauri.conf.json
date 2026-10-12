@@ -42,7 +42,7 @@
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEVCNDA1NDU2NkM5MUU3RjEKUldUeDU1RnNWbFJBNjNvdUlNVXQySUtuR1d0NmQ1K2I3TExjbDNRR2x6WEF6dGRhdU9mYTRZc0MK",
       "endpoints": [
-        "https://github.com/MeStakes/live-vocoder-releases/releases/latest/download/latest.json"
+        "https://github.com/MeStakes/Live-Vocoder/releases/latest/download/latest.json"
       ]
     }
   }
