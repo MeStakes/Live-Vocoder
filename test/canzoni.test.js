@@ -71,3 +71,8 @@ test('canzoni.json con valori sbagliati: si riparano un campo alla volta', () =>
   assert.deepEqual([y.data.eff, y.data.mode, y.data.mano, y.data.titolo], ['coro', 'accordi', 'destra', true]);
   assert.deepEqual([y.data.snd.bande, y.data.snd.vol, y.data.snd.i1], [24, 2.5, 60]);
 });
+
+test("Canzoni della 0.1.0 (senza «accordo») e valori sbagliati: l'accordo nel video resta acceso", () => {
+  const d = interpreta(JSON.stringify({ canzoni: [{ name: 'a', data: {} }, { name: 'b', data: { accordo: 'no' } }, { name: 'c', data: { accordo: false } }] }));
+  assert.deepEqual(d.canzoni.map(c => c.data.accordo), [true, true, false]);
+});

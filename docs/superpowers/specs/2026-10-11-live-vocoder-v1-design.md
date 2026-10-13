@@ -209,7 +209,7 @@ Strati, dal basso verso l'alto:
 3. **Mani a perline:** scheletro color crema con alone, perline sulle articolazioni, cuori con tre stelline intorno sulle punte delle dita alzate. L'alone è rosa sulla mano degli accordi e viola chiaro sulla seconda mano.
 4. **Colonna dell'Intensità:** 5 perline al bordo del video, dal lato della seconda mano. Quelle accese sono viola chiaro e l'ultima accesa è rosa.
 5. **Onda.**
-6. **Accordo** in Pacifico rosa, con estrusione crema e ombra prugna, in alto a sinistra. Se Titolo nel video è acceso, accanto c'è "– <nome della Canzone>" in crema, che si rimpicciolisce se non ci sta.
+6. **Accordo** (se Accordo nel video è acceso) in Pacifico rosa, con estrusione crema e ombra prugna, in alto a sinistra. Se Titolo nel video è acceso, accanto c'è "– <nome della Canzone>" in crema, che si rimpicciolisce se non ci sta; con l'accordo spento il titolo prende il suo posto.
 
 - **Specchio** (se è acceso): rovescia camera, mani e colonna. Le scritte e l'onda restano dritte. Vale anche per il file.
 
@@ -268,7 +268,7 @@ Durante la Registrazione Rust controlla lo spazio libero del volume della cartel
   - "Suono", il display di aiuto, "Di partenza", "Nascondi" / "Mostra" (chiude il banco e ingrandisce il video) e "?" per la guida;
   - i gruppi Effetto (manopola a 3 posizioni con i nomi cliccabili), Mano, Accordo, Synth, Voce, Cuffia, Dispositivi (Ingresso audio, Uscita audio, Camera).
 - **Display:** passando sopra una manopola, un nome di Effetto o un Dispositivo, oppure dandogli il fuoco, mostra il nome e la spiegazione. I testi sono quelli del prototipo.
-- **Impostazioni** (pannello laterale): Titolo nel video ("il nome della Canzone"), Filtro rosa, Specchio, Conto alla rovescia 3 s, Accordi con la mano (Sinistra / Destra), Cartella delle Registrazioni.
+- **Impostazioni** (pannello laterale): Accordo nel video, Titolo nel video ("il nome della Canzone"), Filtro rosa, Specchio, Conto alla rovescia 3 s, Accordi con la mano (Sinistra / Destra), Cartella delle Registrazioni.
   - I primi quattro sono accesi di default, la mano degli accordi è la Sinistra.
   - La cartella vale per tutte le Canzoni. Di default è `~/Movies/Live Vocoder` (Filmati/Live Vocoder) e si cambia con la finestra di scelta cartella di macOS.
 - **Guida "?"** (pannello laterale). Si apre da sola al primo avvio. Capitoli, in quest'ordine:
@@ -282,7 +282,7 @@ Durante la Registrazione Rust controlla lo spazio libero del volume della cartel
 
 ## 8. Canzoni e dati salvati
 
-Una Canzone salva: nome, le 5 Note, Modalità, Formato, Effetto, tutte le manopole del Suono (compreso il Volume in cuffia) e le Impostazioni (Titolo nel video, Filtro rosa, Specchio, Conto alla rovescia, mano degli accordi). La cartella delle Registrazioni e i Dispositivi invece valgono per tutte le Canzoni.
+Una Canzone salva: nome, le 5 Note, Modalità, Formato, Effetto, tutte le manopole del Suono (compreso il Volume in cuffia) e le Impostazioni (Accordo nel video, Titolo nel video, Filtro rosa, Specchio, Conto alla rovescia, mano degli accordi). La cartella delle Registrazioni e i Dispositivi invece valgono per tutte le Canzoni.
 
 **Il salvataggio è automatico** a ogni modifica: non c'è un tasto Salva. I dati vanno in un solo file, `~/Library/Application Support/com.keopees.live-vocoder/canzoni.json`, scritto su un file temporaneo e poi rinominato, così un crash non lo rovina.
 

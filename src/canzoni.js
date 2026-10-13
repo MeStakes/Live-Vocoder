@@ -6,7 +6,7 @@ const B = (r, t, o = 0) => ({ r, t, o });
 // "Note e Suono di partenza" di una Canzone nuova
 export const DEF_SONG = {
   beads: [B(0, 'M'), B(7, 'M'), B(9, 'm'), B(5, 'M'), B(4, 'm')], mode: 'accordi', format: 'verticale', eff: 'coro', snd: DEF_SND,
-  titolo: true, filtro: true, specchio: true, conto: true, mano: 'sinistra',
+  accordo: true, titolo: true, filtro: true, specchio: true, conto: true, mano: 'sinistra',
 };
 export const SONG_KEYS = Object.keys(DEF_SONG);
 // Completa con i valori di partenza: una versione nuova dell'app può aggiungere campi.
@@ -35,7 +35,7 @@ const notaValida = (b) => b && Number.isInteger(b.r) && b.r >= 0 && b.r <= 11 &&
 function ripara(data) {
   const d = canzone('', data && typeof data === 'object' ? data : {}).data;
   for (const [k, ok] of Object.entries(AMMESSI)) if (!ok.includes(d[k])) d[k] = DEF_SONG[k];
-  for (const k of ['titolo', 'filtro', 'specchio', 'conto']) if (typeof d[k] !== 'boolean') d[k] = DEF_SONG[k];
+  for (const k of ['accordo', 'titolo', 'filtro', 'specchio', 'conto']) if (typeof d[k] !== 'boolean') d[k] = DEF_SONG[k];
   const beads = Array.isArray(d.beads) ? d.beads : [];
   d.beads = DEF_SONG.beads.map((b0, i) => (notaValida(beads[i]) ? { r: beads[i].r, t: beads[i].t, o: beads[i].o } : { ...b0 }));
   if (!d.snd || typeof d.snd !== 'object') d.snd = { ...DEF_SND };

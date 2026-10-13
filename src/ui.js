@@ -35,6 +35,7 @@ const lvPct = n => percentuale(n, st.snd.i1, st.snd.i5);
 
 const sw = (k, label) => `<button class="switch" role="switch" data-act="sw" data-val="${k}"><span class="track"></span>${label}</button>`;
 const videoSet = () => `<div class="vset">
+  ${sw('accordo', 'Accordo nel video')}
   <div class="vrow">${sw('titolo', 'Titolo nel video')}<b>il nome della Canzone</b></div>
   ${sw('filtro', 'Filtro rosa')}${sw('specchio', 'Specchio')}${sw('conto', 'Conto alla rovescia 3 s')}
   <div class="vrow">Accordi con la mano <span class="seg" role="group" aria-label="Mano degli accordi"><button data-act="mano" data-val="sinistra">Sinistra</button><button data-act="mano" data-val="destra">Destra</button></span></div>
@@ -238,7 +239,7 @@ function frame(now) {
     const b = st.beads[st.i];
     disegna(cv, {
       video: camVideo, mani: st.mani, specchio: st.specchio, filtro: st.filtro, mano: st.mano, lv: st.lv, lvl: lvPct(st.lv) / 100,
-      eff: st.eff, hz: freqs(b), fermi: st.fermi, accordo: name(b), titolo: st.titolo ? songs[st.song].name.trim() : '',
+      eff: st.eff, hz: freqs(b), fermi: st.fermi, accordo: st.accordo ? name(b) : '', titolo: st.titolo ? songs[st.song].name.trim() : '',
       conto: st.ui.conto, livello: motore.livello(),
     }, reduce ? 1.3 : now / 1000);
   }

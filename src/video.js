@@ -101,10 +101,11 @@ export function disegna(cv, s, t) {
   x.lineWidth = m * .008; wave(1, 1);
   x.shadowBlur = 0;
   const fz = m * .11, tx = m * .06, ty = m * .05 + fz * 1.05;
-  scritta(x, s.accordo, tx, ty, fz);
+  if (s.accordo) scritta(x, s.accordo, tx, ty, fz);
   if (s.titolo) {
+    // con Accordo nel video spento il titolo prende il suo posto
     x.font = `${fz}px Pacifico, cursive`;
-    const sx = tx + x.measureText(s.accordo).width + fz * .2, text = '– ' + s.titolo;
+    const sx = s.accordo ? tx + x.measureText(s.accordo).width + fz * .2 : tx, text = s.accordo ? '– ' + s.titolo : s.titolo;
     let ts = fz * .5;
     x.font = `${ts}px Pacifico, cursive`;
     const room = W - m * .05 - sx, w = x.measureText(text).width;
